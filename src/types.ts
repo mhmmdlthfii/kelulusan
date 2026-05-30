@@ -64,6 +64,7 @@ export interface ApplicationSettings {
   announcementTemplate: string;
   schoolLogoRight?: string; // base64 or URL for right kop logo
   sklNumberTemplate?: string; // customizable layout format for letter reference numbers
+  backgroundImage?: string; // custom background image url
 }
 
 export interface LoginLog {

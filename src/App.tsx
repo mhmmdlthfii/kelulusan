@@ -108,6 +108,22 @@ export default function App() {
     localStorage.setItem("app_theme", newTheme);
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const root = document.documentElement;
+      const body = document.body;
+      if (isDarkActive) {
+        root.classList.add("dark");
+        body.classList.remove("bg-white", "bg-slate-50", "text-slate-800");
+        body.classList.add("bg-slate-950", "text-slate-100");
+      } else {
+        root.classList.remove("dark");
+        body.classList.remove("bg-slate-900", "bg-slate-950", "text-slate-100", "text-white");
+        body.classList.add("bg-slate-50", "text-slate-800");
+      }
+    }
+  }, [isDarkActive]);
+
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   // Global Settings and Announcements
@@ -216,6 +232,7 @@ export default function App() {
   const [formGradDate, setFormGradDate] = useState("");
   const [formGradTime, setFormGradTime] = useState("");
   const [formTemplateText, setFormTemplateText] = useState("");
+  const [formBackgroundImage, setFormBackgroundImage] = useState("");
   const [restoreJsonText, setRestoreJsonText] = useState("");
 
   // Initialize and route parse
@@ -298,6 +315,7 @@ export default function App() {
       setFormGradDate(settingsData.graduationDate);
       setFormGradTime(settingsData.graduationTime);
       setFormTemplateText(settingsData.announcementTemplate);
+      setFormBackgroundImage(settingsData.backgroundImage || "");
     } catch (e) {
       console.error("Gagal mendapatkan konfigurasi dasar publik", e);
     }
@@ -880,7 +898,8 @@ export default function App() {
           signatureImage: formSignatureImage,
           graduationDate: formGradDate,
           graduationTime: formGradTime,
-          announcementTemplate: formTemplateText
+          announcementTemplate: formTemplateText,
+          backgroundImage: formBackgroundImage
         })
       });
 
@@ -1055,40 +1074,83 @@ export default function App() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkActive ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       
-      {/* --------------------------------------------------------------------------------- */}
-      {/* PUBLIC HOME/LANDING PAGE */}
-      {/* --------------------------------------------------------------------------------- */}
-      {currentPath === "/" && (
-        <div className="relative min-h-screen flex flex-col justify-between overflow-x-hidden overflow-y-auto font-sans transition-colors duration-305">
+      {currentPath !== "/admin-dashboard" ? (
+        <div className="relative min-h-screen flex flex-col justify-between overflow-x-hidden overflow-y-auto font-sans transition-colors duration-350 z-0">
           {/* Beautiful Bright Academic Campus Background Image */}
           <div 
-            className="absolute inset-0 bg-cover bg-center transition-all duration-500 pointer-events-none"
+            className="absolute inset-0 bg-cover bg-center transition-all duration-500 pointer-events-none z-0"
             style={{ 
-              backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80")',
+              backgroundImage: settings?.backgroundImage ? `url("${settings.backgroundImage}")` : 'url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80")',
               backgroundAttachment: "fixed"
             }}
           />
+
+          {/* iOS Liquid Glass Ambient Drifting Orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <motion.div
+              animate={{
+                x: [0, 80, -40, 0],
+                y: [0, -100, 50, 0],
+                scale: [1, 1.25, 0.85, 1],
+              }}
+              transition={{
+                duration: 25,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute top-1/4 -left-20 w-96 h-96 rounded-full bg-blue-500/15 blur-[120px] mix-blend-screen"
+            />
+            <motion.div
+              animate={{
+                x: [0, -120, 60, 0],
+                y: [0, 80, -120, 0],
+                scale: [1, 0.9, 1.3, 1],
+              }}
+              transition={{
+                duration: 30,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute bottom-1/3 -right-20 w-[450px] h-[450px] rounded-full bg-cyan-450/15 blur-[140px] mix-blend-screen"
+            />
+            <motion.div
+              animate={{
+                x: [0, 50, -50, 0],
+                y: [0, 120, -60, 0],
+                scale: [1, 1.2, 0.9, 1],
+              }}
+              transition={{
+                duration: 28,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute top-10 right-1/4 w-80 h-80 rounded-full bg-purple-500/10 blur-[110px] mix-blend-screen"
+            />
+          </div>
           
           {/* Translucent overlay masking to support light/dark theme content beautifully & keep text highly readable */}
-          <div className={`absolute inset-0 transition-colors duration-300 pointer-events-none ${
+          <div className={`absolute inset-0 transition-colors duration-300 pointer-events-none z-0 ${
             isDarkActive 
-              ? "bg-slate-950/92 backdrop-blur-[2px]" 
-              : "bg-white/88 backdrop-blur-[1px]"
+              ? "bg-slate-950/85 backdrop-blur-[10px]" 
+              : "bg-white/82 backdrop-blur-[12px]"
           }`} />
 
           {/* Subtle grid background backplane */}
-          <div className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none transition-opacity duration-300 ${
+          <div className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none transition-opacity duration-300 z-0 ${
             isDarkActive 
               ? "bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)]" 
               : "bg-[linear-gradient(to_right,#cbd5e1_1px,transparent_1px),linear-gradient(to_bottom,#cbd5e1_1px,transparent_1px)]"
           }`} />
 
           {/* Top Header Navigation */}
-          <header className={`w-full z-10 px-6 py-4 border-b backdrop-blur-md relative transition-colors duration-300 ${
-            isDarkActive ? "border-white/5 bg-slate-950/40" : "border-slate-200/85 bg-white/40"
+          <header className={`fixed top-0 inset-x-0 z-50 px-6 py-4 border-b backdrop-blur-md transition-colors duration-300 ${
+            isDarkActive ? "border-white/5 bg-slate-950/70" : "border-slate-200/80 bg-white/70 shadow-sm"
           }`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => setCurrentPath("/")}
+              >
                 <div className="h-10 w-10 bg-gradient-to-tr from-blue-500 to-cyan-400 p-0.5 rounded-2xl shadow-lg shadow-blue-500/10 flex items-center justify-center">
                   <div className={`h-full w-full rounded-[14px] flex items-center justify-center ${
                     isDarkActive ? "bg-slate-950" : "bg-white"
@@ -1120,7 +1182,7 @@ export default function App() {
                   >
                     {theme === "light" && <Sun size={15} className="text-amber-500" />}
                     {theme === "dark" && <Moon size={15} className="text-cyan-400" />}
-                    {theme === "system" && <Laptop size={15} className="text-blue-505" />}
+                    {theme === "system" && <Laptop size={15} className="text-blue-500" />}
                     <span className="text-xs font-semibold uppercase tracking-wider hidden sm:inline-block">
                       {theme === "light" && "Terang"}
                       {theme === "dark" && "Gelap"}
@@ -1147,7 +1209,7 @@ export default function App() {
                           }`}
                         >
                           <div className={`px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest border-b mb-1 ${
-                            isDarkActive ? "text-slate-500 border-white/5" : "text-slate-400 border-slate-100"
+                            isDarkActive ? "text-slate-550 border-white/5" : "text-slate-400 border-slate-100"
                           }`}>
                             Pilihan Tema
                           </div>
@@ -1192,7 +1254,7 @@ export default function App() {
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all ${
                               theme === "system"
                                 ? isDarkActive ? "bg-white/10 text-white font-bold" : "bg-slate-100 text-slate-950 font-semibold"
-                                : isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-slate-260" : "hover:bg-slate-50 text-slate-600 hover:text-slate-950"
+                                : isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-slate-260" : "hover:bg-slate-50 text-slate-600 hover:text-slate-955"
                             }`}
                           >
                             <Laptop size={14} className={theme === "system" ? "text-blue-500" : ""} />
@@ -1221,8 +1283,9 @@ export default function App() {
             </div>
           </header>
 
-          {/* Main Content Layout - Split Grid Presentation with sunlit campus backdrop */}
-          <main className="flex-grow z-10 max-w-5xl w-full mx-auto px-4 py-8 lg:py-12 flex flex-col gap-10">
+          <div className="flex-grow z-10 w-full flex flex-col justify-between">
+            {currentPath === "/" && (
+              <main className="flex-grow z-10 max-w-5xl w-full mx-auto px-4 pt-24 pb-20 md:pt-28 md:pb-24 flex flex-col gap-10">
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
               {/* Left Column: Title, School Name, Announcement Text & Countdown Counter */}
@@ -1574,173 +1637,208 @@ export default function App() {
             )}
 
           </main>
+        )}
 
-          {/* Elegant Bento Footer */}
-          <footer className={`w-full py-10 px-6 border-t text-center z-10 space-y-3 mt-12 transition-colors duration-300 ${
-            isDarkActive ? "bg-slate-950 border-white/5 text-slate-500" : "bg-white border-slate-250 text-slate-600 shadow-sm"
-          }`}>
-            <p className={`font-bold uppercase tracking-widest text-xs ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>{settings?.schoolName || "SMA Negeri 1 Jakarta"}</p>
-            <p className={`max-w-md mx-auto leading-relaxed ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>{settings?.address}</p>
-            <p className={`pt-2 text-[10px] ${isDarkActive ? "text-slate-600" : "text-slate-400"}`}>{settings?.footerText || "Copyright © 2026. All Rights Reserved"}</p>
-          </footer>
-        </div>
-      )}
-
-      {/* --------------------------------------------------------------------------------- */}
-      {/* QR VERIFICATION ROUTE VIEW */}
-      {/* --------------------------------------------------------------------------------- */}
-      {currentPath.startsWith("/verifikasi/") && (
-        <div className="min-h-screen py-16 px-4 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-[400px] bg-gradient-to-b from-purple-600/10 via-transparent to-transparent pointer-events-none" />
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl" />
-          
-          <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-xl shadow-glass text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center border border-white/15">
-                <QrCode size={32} className="text-purple-400" />
-              </div>
-            </div>
-
-            {verLoading ? (
-              <div className="py-8 space-y-3">
-                <RefreshCw size={24} className="text-purple-400 animate-spin mx-auto" />
-                <p className="text-xs text-slate-400 font-mono">Memeriksa kunci siber surat kelulusan...</p>
-              </div>
-            ) : verResult ? (
-              <div className="space-y-6">
-                <div>
-                  <h3 className={`text-lg font-bold ${verResult.isValid ? 'text-emerald-400' : 'text-rose-500'}`}>
-                    {verResult.isValid ? "DOKUMEN VALID & RESMI" : "DOKUMEN TIDAK VALID / PALSU"}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">{verResult.message}</p>
+        {/* --------------------------------------------------------------------------------- */}
+        {/* QR VERIFICATION ROUTE VIEW */}
+        {/* --------------------------------------------------------------------------------- */}
+        {currentPath.startsWith("/verifikasi/") && (
+          <div className="flex-grow z-10 w-full flex items-center justify-center px-4 pt-24 pb-20 md:pt-28 md:pb-24">
+            <div className={`w-full max-w-md p-6 rounded-2xl border backdrop-blur-xl shadow-glass text-center space-y-6 ${
+              isDarkActive ? "bg-slate-900/40 border-white/10 text-slate-100" : "bg-white/60 border-slate-200 text-slate-800"
+            }`}>
+              <div className="flex justify-center">
+                <div className={`h-16 w-16 rounded-full flex items-center justify-center border ${
+                  isDarkActive ? "bg-white/5 border-white/15" : "bg-slate-100 border-slate-200"
+                }`}>
+                  <QrCode size={32} className="text-blue-500 dark:text-purple-400" />
                 </div>
+              </div>
 
-                {verResult.isValid && verResult.student && (
-                  <div className="p-4 rounded-xl border border-white/5 bg-white/5 space-y-3 text-left">
-                    <span className="block text-[10px] uppercase tracking-wider font-bold text-purple-400">Metadata Siswa:</span>
-                    <div className="space-y-1.5 text-xs text-slate-300 font-mono">
-                      <p><span className="text-slate-500">Nama :</span> <span className="font-sans font-bold text-white capitalize">{verResult.student.name}</span></p>
-                      <p><span className="text-slate-500">NISN :</span> {verResult.student.nisn}</p>
-                      <p><span className="text-slate-500">NIS  :</span> {verResult.student.nis}</p>
-                      <p><span className="text-slate-500">Kelas:</span> {verResult.student.className}</p>
-                      <p><span className="text-slate-500">Status:</span> <span className={`font-sans font-bold ${verResult.student.status === "Lulus" ? 'text-emerald-400': 'text-rose-400'}`}>{verResult.student.status}</span></p>
-                    </div>
+              {verLoading ? (
+                <div className="py-8 space-y-3 font-semibold">
+                  <RefreshCw size={24} className="text-blue-500 dark:text-purple-400 animate-spin mx-auto" />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">Memeriksa kunci siber surat kelulusan...</p>
+                </div>
+              ) : verResult ? (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className={`text-lg font-black tracking-tight ${verResult.isValid ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500'}`}>
+                      {verResult.isValid ? "DOKUMEN VALID & RESMI" : "DOKUMEN TIDAK VALID / PALSU"}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{verResult.message}</p>
                   </div>
-                )}
 
-                <div className="pt-2">
-                  <button
-                    onClick={() => setCurrentPath("/")}
-                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition"
-                  >
-                    Kembali Ke Portal Utama
-                  </button>
+                  {verResult.isValid && verResult.student && (
+                    <div className={`p-4 rounded-xl border space-y-3 text-left ${
+                      isDarkActive ? "border-white/5 bg-white/5" : "border-slate-200 bg-slate-50/50"
+                    }`}>
+                      <span className="block text-[10px] uppercase tracking-wider font-bold text-blue-600 dark:text-purple-400">Metadata Siswa:</span>
+                      <div className="space-y-1.5 text-xs font-mono">
+                        <p><span className="text-slate-500">Nama :</span> <span className="font-sans font-bold capitalize">{verResult.student.name}</span></p>
+                        <p><span className="text-slate-500">NISN :</span> {verResult.student.nisn}</p>
+                        <p><span className="text-slate-500">NIS  :</span> {verResult.student.nis}</p>
+                        <p><span className="text-slate-500">Kelas:</span> {verResult.student.className}</p>
+                        <p><span className="text-slate-500">Status:</span> <span className={`font-sans font-bold ${verResult.student.status === "Lulus" ? 'text-emerald-500 dark:text-emerald-400': 'text-rose-550'}`}>{verResult.student.status}</span></p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setCurrentPath("/")}
+                      className={`w-full py-2.5 rounded-xl text-xs font-bold transition shadow-sm ${
+                        isDarkActive 
+                          ? "bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300" 
+                          : "bg-white hover:bg-slate-100 border border-slate-200 text-slate-700"
+                      }`}
+                    >
+                      Kembali Ke Portal Utama
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <p className="text-slate-400 text-xs">Gagal melakukan verifikasi.</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* --------------------------------------------------------------------------------- */}
-      {/* ADMIN PORTAL LOGIN */}
-      {/* --------------------------------------------------------------------------------- */}
-      {currentPath === "/admin-login" && (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Subtle decoration elements */}
-          <div className="absolute top-0 inset-x-0 h-[400px] bg-gradient-to-b from-cyan-600/10 via-transparent to-transparent pointer-events-none" />
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-          
-          <div className="w-full max-w-sm p-6 md:p-8 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-xl shadow-glass space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex h-12 w-12 bg-white/5 rounded-full items-center justify-center border border-white/15 mb-2">
-                <Lock size={20} className="text-cyan-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">LOGIN PANEL ADMIN</h2>
-              <p className="text-xs text-slate-400">Gunakan kredensial yang disiapkan oleh sistem.</p>
+              ) : (
+                <p className="text-slate-400 text-xs font-semibold">Gagal melakukan verifikasi.</p>
+              )}
             </div>
+          </div>
+        )}
 
-            {loginError && (
-              <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl flex items-start gap-1.5">
-                <ShieldAlert size={16} className="mt-0.5 flex-shrink-0" />
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAdminLogin} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Username Admin</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="admin atau operator"
-                  className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none transition font-sans"
-                  value={loginUsername}
-                  onChange={e => setLoginUsername(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Kata Sandi</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Masukkan password..."
-                    className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl pl-3 pr-10 py-2.5 text-sm text-white focus:outline-none transition font-sans"
-                    value={loginPassword}
-                    onChange={e => setLoginPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white transition"
-                  >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
+        {/* --------------------------------------------------------------------------------- */}
+        {/* ADMIN PORTAL LOGIN */}
+        {/* --------------------------------------------------------------------------------- */}
+        {currentPath === "/admin-login" && (
+          <div className="flex-grow z-10 w-full flex items-center justify-center px-4 pt-24 pb-20 md:pt-28 md:pb-24">
+            <div className={`w-full max-w-sm p-6 md:p-8 rounded-2xl border backdrop-blur-xl shadow-glass space-y-6 ${
+              isDarkActive ? "bg-slate-900/40 border-white/10 text-slate-100" : "bg-white/60 border-slate-200 text-slate-800"
+            }`}>
+              <div className="text-center space-y-2">
+                <div className={`inline-flex h-12 w-12 rounded-full items-center justify-center border mb-2 ${
+                  isDarkActive ? "bg-white/5 border-white/15" : "bg-slate-100 border-slate-200"
+                }`}>
+                  <Lock size={20} className="text-blue-500 dark:text-cyan-400" />
                 </div>
+                <h2 className="text-lg font-black tracking-tight">LOGIN PANEL ADMIN</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Gunakan kredensial yang disiapkan oleh sistem.</p>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <label className="flex items-center gap-2 cursor-pointer">
+              {loginError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-xs rounded-xl flex items-start gap-1.5 font-semibold">
+                  <ShieldAlert size={16} className="mt-0.5 flex-shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest mb-1.5">Username Admin</label>
                   <input
-                    type="checkbox"
-                    className="rounded bg-slate-950 border-white/10 text-cyan-500 focus:ring-0 cursor-pointer"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
+                    type="text"
+                    required
+                    placeholder="admin atau operator"
+                    className={`w-full rounded-xl px-3 py-2 text-sm focus:outline-none transition font-sans border ${
+                      isDarkActive 
+                        ? "bg-slate-950 border-white/10 focus:border-cyan-500/50 text-white" 
+                        : "bg-white border-slate-200 focus:border-blue-500/50 text-slate-800 shadow-inner"
+                    }`}
+                    value={loginUsername}
+                    onChange={e => setLoginUsername(e.target.value)}
                   />
-                  <span>Ingat login saya</span>
-                </label>
-                <span className="hover:text-cyan-400 transition cursor-help" title="Password default: admin -> admin123, operator -> operator123">Bantuan Akun?</span>
-              </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest mb-1.5">Kata Sandi</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="Masukkan password..."
+                      className={`w-full rounded-xl pl-3 pr-10 py-2.5 text-sm focus:outline-none transition font-sans border ${
+                        isDarkActive 
+                          ? "bg-slate-950 border-white/10 focus:border-cyan-500/50 text-white" 
+                          : "bg-white border-slate-200 focus:border-blue-500/50 text-slate-800 shadow-inner"
+                      }`}
+                      value={loginPassword}
+                      onChange={e => setLoginPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium">
+                    <input
+                      type="checkbox"
+                      className="rounded border-slate-300 dark:border-white/10 text-cyan-500 focus:ring-0 cursor-pointer"
+                      checked={rememberMe}
+                      onChange={e => setRememberMe(e.target.checked)}
+                    />
+                    <span>Ingat login saya</span>
+                  </label>
+                  <span className="hover:text-blue-500 dark:hover:text-cyan-400 transition cursor-help font-medium" title="Password default: admin -> admin123, operator -> operator123">Bantuan Akun?</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loginLoading}
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl font-bold text-sm text-slate-950 flex items-center justify-center gap-2 cursor-pointer shadow-md transition"
+                >
+                  {loginLoading ? (
+                    <>
+                      <RefreshCw className="animate-spin" size={16} />
+                      <span>MEMERIKSA DATA AUTH...</span>
+                    </>
+                  ) : (
+                    <span>MASUK SEKARANG</span>
+                  )}
+                </button>
+              </form>
 
               <button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl font-bold text-sm text-slate-950 flex items-center justify-center gap-2 cursor-pointer shadow-md transition"
+                onClick={() => setCurrentPath("/")}
+                className={`w-full border py-2 rounded-xl text-xs font-semibold transition ${
+                  isDarkActive 
+                    ? "border-white/5 hover:bg-white/5 text-slate-400 hover:text-white" 
+                    : "border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-900"
+                }`}
               >
-                {loginLoading ? (
-                  <>
-                    <RefreshCw className="animate-spin" size={16} />
-                    <span>MEMERIKSA DATA AUTH...</span>
-                  </>
-                ) : (
-                  <span>MASUK SEKARANG</span>
-                )}
+                Kembali Ke Portal Depan
               </button>
-            </form>
-
-            <button
-              onClick={() => setCurrentPath("/")}
-              className="w-full border border-white/5 hover:bg-white/5 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition"
-            >
-              Kembali Ke Portal Depan
-            </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Elegant Bento Footer - Floating Fixed Bottom */}
+        <footer className={`fixed bottom-0 inset-x-0 py-2.5 px-6 border-t text-center z-40 transition-colors duration-300 backdrop-blur-md ${
+          isDarkActive 
+            ? "bg-slate-950/75 border-white/5 text-slate-400" 
+            : "bg-white/80 border-slate-200 text-slate-600 shadow-md"
+        }`}>
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight">
+            <div className="text-center md:text-left">
+              <span className={`font-bold uppercase tracking-wide mr-2 ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>
+                {settings?.schoolName || "SMA Negeri 1 Jakarta"}
+              </span>
+              <span className={`hidden md:inline text-[10px] ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>
+                {settings?.address}
+              </span>
+            </div>
+            <div className="text-center md:text-right flex flex-wrap justify-center md:justify-end items-center gap-x-2 gap-y-0.5">
+              <p className="m-0 text-[11px] leading-none">
+                Powered by <a href="https://educita.id" target="_blank" rel="noopener noreferrer" className="hover:underline text-cyan-500 dark:text-cyan-400 font-bold cursor-pointer">educita.id</a> -- <span className="font-extrabold bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 dark:from-blue-400 dark:via-cyan-400 dark:to-teal-400 bg-clip-text text-transparent">Muhammad Luthfi</span> v2026
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  ) : null}
 
       {/* --------------------------------------------------------------------------------- */}
       {/* ADMIN MAIN DASHBOARD SYSTEM */}
@@ -1749,16 +1847,20 @@ export default function App() {
         <div className="min-h-screen flex">
           
           {/* Sidebar Section */}
-          <aside className={`no-print border-r border-white/10 bg-slate-950 z-20 transition-all duration-300 w-64 flex flex-col justify-between ${sidebarOpen ? 'relative' : 'hidden'}`}>
+          <aside className={`no-print border-r z-20 transition-all duration-300 w-64 flex flex-col justify-between ${
+            isDarkActive ? "border-white/10 bg-slate-950" : "border-slate-200 bg-white"
+          } ${sidebarOpen ? 'relative' : 'hidden'}`}>
             <div className="flex-grow">
               {/* Sidebar Header Title Crest */}
-              <div className="p-4 flex items-center gap-2 border-b border-white/10 bg-white/5">
+              <div className={`p-4 flex items-center gap-2 border-b ${
+                isDarkActive ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"
+              }`}>
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center">
-                  <LayoutDashboard size={16} className="text-slate-950" />
+                  <LayoutDashboard size={16} className={isDarkActive ? "text-slate-950" : "text-white"} />
                 </div>
                 <div>
-                  <h3 className="text-xs font-extrabold text-white leading-none">E-KELULUSAN</h3>
-                  <p className="text-[9px] text-cyan-400 mt-1 font-mono tracking-widest">{adminUser.role.toUpperCase()}</p>
+                  <h3 className={`text-xs font-extrabold leading-none ${isDarkActive ? "text-white" : "text-slate-800"}`}>E-KELULUSAN</h3>
+                  <p className={`text-[9px] mt-1 font-mono tracking-widest ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>{adminUser.role.toUpperCase()}</p>
                 </div>
               </div>
 
@@ -1786,8 +1888,12 @@ export default function App() {
                       onClick={() => setActiveAdminTab(item.id as any)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
                         isActive 
-                          ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border-l-4 border-cyan-500 text-white" 
-                          : "text-slate-400 hover:bg-white/5 hover:text-white"
+                          ? (isDarkActive 
+                              ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border-l-4 border-cyan-500 text-white" 
+                              : "bg-blue-50 border-l-4 border-blue-600 text-blue-600 font-bold") 
+                          : (isDarkActive 
+                              ? "text-slate-400 hover:bg-white/5 hover:text-white" 
+                              : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900")
                       }`}
                     >
                       <IconComp size={16} />
@@ -1799,19 +1905,25 @@ export default function App() {
             </div>
 
             {/* Logout footer of sidebar */}
-            <div className="p-3 border-t border-white/10 bg-slate-900/60 font-sans space-y-3">
+            <div className={`p-3 border-t font-sans space-y-3 ${
+              isDarkActive ? "border-white/10 bg-slate-900/60" : "border-slate-200 bg-slate-50"
+            }`}>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-cyan-500 text-slate-950 font-bold flex items-center justify-center text-xs capitalize">
                   {adminUser.username.charAt(0)}
                 </div>
                 <div className="truncate">
-                  <p className="text-[11px] font-bold text-white leading-tight">{adminUser.name}</p>
-                  <p className="text-[9px] text-slate-400 tracking-wider">Online</p>
+                  <p className={`text-[11px] font-bold leading-tight ${isDarkActive ? "text-white" : "text-slate-800"}`}>{adminUser.name}</p>
+                  <p className={`text-[9px] tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Online</p>
                 </div>
               </div>
               <button
                 onClick={handleAdminLogout}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition cursor-pointer border border-rose-500/20"
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  isDarkActive 
+                    ? "bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border-rose-500/20" 
+                    : "bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border-rose-200"
+                }`}
               >
                 <LogOut size={12} />
                 <span>LOGOUT SYSTEM</span>
@@ -1820,27 +1932,126 @@ export default function App() {
           </aside>
 
           {/* Main workspace platform right */}
-          <main className="flex-grow flex flex-col justify-between overflow-x-hidden min-h-screen">
+          <main className={`flex-grow flex flex-col justify-between overflow-x-hidden min-h-screen ${
+            isDarkActive ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"
+          }`}>
             {/* Platform Topbar */}
-            <header className="no-print bg-slate-950 border-b border-white/10 p-4 flex items-center justify-between z-10 sticky top-0 backdrop-blur-md">
+            <header className={`no-print border-b p-4 flex items-center justify-between z-10 sticky top-0 backdrop-blur-md ${
+              isDarkActive ? "bg-slate-950/80 border-white/10 text-white" : "bg-white/90 border-slate-200 text-slate-800 shadow-sm"
+            }`}>
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
+                  className={`p-1.5 rounded-lg transition ${
+                    isDarkActive ? "bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                  }`}
                 >
                   <Menu size={18} />
                 </button>
-                <div className="hidden sm:flex items-center gap-2 bg-slate-900 border border-white/10 rounded-xl px-2 py-1 text-[11px] text-slate-400 font-mono">
-                  <Building size={12} className="text-blue-400" />
+                <div className={`hidden sm:flex items-center gap-2 border rounded-xl px-2 py-1 text-[11px] font-mono ${
+                  isDarkActive ? "bg-slate-900 border-white/10 text-slate-400" : "bg-slate-100 border-slate-200 text-slate-600"
+                }`}>
+                  <Building size={12} className="text-blue-500" />
                   <span>{settings?.schoolName || "Pangkalan e-Kelulusan"}</span>
                 </div>
               </div>
 
               {/* Status information right topbar */}
               <div className="flex items-center gap-4">
+                {/* Theme Selector directly in Admin Header */}
+                <div className="relative">
+                  <button
+                    onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                    className={`p-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+                      isDarkActive ? "bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                    }`}
+                    title="Pilih Tema Tampilan"
+                  >
+                    {theme === "light" && <Sun size={14} className="text-amber-500" />}
+                    {theme === "dark" && <Moon size={14} className="text-cyan-400" />}
+                    {theme === "system" && <Laptop size={14} className="text-blue-500" />}
+                  </button>
+
+                  <AnimatePresence>
+                    {themeMenuOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setThemeMenuOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className={`absolute right-0 mt-2 w-40 rounded-2xl p-2 border shadow-2xl z-50 backdrop-blur-3xl ${
+                            isDarkActive ? "bg-slate-900 border-white/10 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+                          }`}
+                        >
+                          <div className={`px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest border-b mb-1 ${
+                            isDarkActive ? "text-slate-500 border-white/5" : "text-slate-400 border-slate-100"
+                          }`}>
+                            Pilihan Tema
+                          </div>
+                          
+                          <button
+                            onClick={() => {
+                              handleThemeChange("light");
+                              setThemeMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all ${
+                              theme === "light" 
+                                ? (isDarkActive ? "bg-white/10 text-white font-bold" : "bg-blue-50 text-blue-600 font-bold") 
+                                : (isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-slate-200" : "hover:bg-slate-50 text-slate-500 hover:text-slate-805")
+                            }`}
+                          >
+                            <Sun size={14} className={theme === "light" ? "text-amber-500" : ""} />
+                            <span>Terang</span>
+                            {theme === "light" && <span className="ml-auto text-emerald-500 text-[10px]">●</span>}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              handleThemeChange("dark");
+                              setThemeMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all ${
+                              theme === "dark" 
+                                ? (isDarkActive ? "bg-white/10 text-white font-bold" : "bg-blue-50 text-blue-600 font-bold") 
+                                : (isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-slate-200" : "hover:bg-slate-50 text-slate-500 hover:text-slate-805")
+                            }`}
+                          >
+                            <Moon size={14} className={theme === "dark" ? "text-cyan-400" : ""} />
+                            <span>Gelap</span>
+                            {theme === "dark" && <span className="ml-auto text-emerald-500 text-[10px]">●</span>}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              handleThemeChange("system");
+                              setThemeMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all ${
+                              theme === "system" 
+                                ? (isDarkActive ? "bg-white/10 text-white font-bold" : "bg-blue-50 text-blue-600 font-bold") 
+                                : (isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-slate-200" : "hover:bg-slate-50 text-slate-500 hover:text-slate-805")
+                            }`}
+                          >
+                            <Laptop size={14} className={theme === "system" ? "text-blue-500" : ""} />
+                            <span>Sistem</span>
+                            {theme === "system" && <span className="ml-auto text-emerald-500 text-[10px]">●</span>}
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <button
                   onClick={fetchAdminDashboardData}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition"
+                  className={`p-1.5 rounded-lg transition ${
+                    isDarkActive ? "bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                  }`}
                   title="Reload DB Data"
                 >
                   <RefreshCw size={14} className="hover:rotate-180 transition duration-500" />
@@ -1851,7 +2062,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono font-medium lowercase">
+                  <span className={`text-[10px] font-mono font-medium lowercase ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                     {adminUser.role === UserRole.SUPER_ADMIN ? 'super_admin' : 'operator'}
                   </span>
                 </div>
@@ -1861,12 +2072,12 @@ export default function App() {
             {/* Dashboard Sub-layouts workspace */}
             <div className="p-4 md:p-8 flex-grow space-y-8 max-w-7xl w-full mx-auto">
               
-              {/* 1. DASHBOARD OVERVIEW TAB */}
+               {/* 1. DASHBOARD OVERVIEW TAB */}
               {activeAdminTab === "dashboard" && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Dashboard Monitoring Akademik</h2>
-                    <p className="text-xs text-slate-400 mt-1">Sapaan hangat, {adminUser.name}. Berikut ringkasan parameter siswa hari ini.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Dashboard Monitoring Akademik</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Sapaan hangat, {adminUser.name}. Berikut ringkasan parameter siswa hari ini.</p>
                   </div>
 
                   {/* Gradient stats widgets (AdminLTE style) */}
@@ -1892,13 +2103,13 @@ export default function App() {
                   {/* SVG visualizations for gender ratios & passing classes */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Visualizer card 1: Gender split */}
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Rasio Kelulusan Berdasarkan Hasil</h3>
+                    <div className={`p-5 rounded-2xl space-y-4 border ${isDarkActive ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200 shadow-sm"}`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Rasio Kelulusan Berdasarkan Hasil</h3>
                       <div className="flex items-center gap-6 py-6 font-mono">
                         {/* Circular progress representations as direct responsive inline SVG charts */}
                         <div className="relative w-32 h-32 flex-shrink-0 mx-auto">
                           <svg className="w-full h-full transform -rotate-90">
-                            <circle cx="64" cy="64" r="50" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                            <circle cx="64" cy="64" r="50" fill="transparent" stroke={isDarkActive ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} strokeWidth="12" />
                             <circle 
                               cx="64" 
                               cy="64" 
@@ -1911,23 +2122,35 @@ export default function App() {
                             />
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center font-sans">
-                            <span className="text-xl font-extrabold text-white">{(totalLulus / (totalSiswa || 1) * 100 || 0).toFixed(0)}%</span>
-                            <span className="text-[9px] text-emerald-400 font-semibold tracking-wide">Lulus Murni</span>
+                            <span className={`text-xl font-extrabold ${isDarkActive ? "text-white" : "text-slate-800"}`}>{(totalLulus / (totalSiswa || 1) * 100 || 0).toFixed(0)}%</span>
+                            <span className={`text-[9px] font-semibold tracking-wide ${isDarkActive ? "text-emerald-400" : "text-emerald-600"}`}>Lulus Murni</span>
                           </div>
                         </div>
 
                         <div className="space-y-2 text-xs flex-grow">
-                          <div className="flex justify-between border-b border-white/5 pb-1"><span className="text-slate-400">Lulus Penuh:</span><span className="text-emerald-400 font-bold">{totalLulus}</span></div>
-                          <div className="flex justify-between border-b border-white/5 pb-1"><span className="text-slate-400">Lulus Bersyarat:</span><span className="text-amber-400 font-bold">{totalLulusBersyarat}</span></div>
-                          <div className="flex justify-between border-b border-white/5 pb-1"><span className="text-slate-400">Belum Lulus:</span><span className="text-rose-400 font-bold">{totalTidakLulus}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-500 font-semibold">Total:</span><span className="text-white font-bold">{totalSiswa}</span></div>
+                          <div className={`flex justify-between border-b pb-1 ${isDarkActive ? "border-white/5" : "border-slate-100"}`}>
+                            <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>Lulus Penuh:</span>
+                            <span className={`font-bold ${isDarkActive ? "text-emerald-400" : "text-emerald-600"}`}>{totalLulus}</span>
+                          </div>
+                          <div className={`flex justify-between border-b pb-1 ${isDarkActive ? "border-white/5" : "border-slate-100"}`}>
+                            <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>Lulus Bersyarat:</span>
+                            <span className={`font-bold ${isDarkActive ? "text-amber-400" : "text-amber-600"}`}>{totalLulusBersyarat}</span>
+                          </div>
+                          <div className={`flex justify-between border-b pb-1 ${isDarkActive ? "border-white/5" : "border-slate-100"}`}>
+                            <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>Belum Lulus:</span>
+                            <span className={`font-bold ${isDarkActive ? "text-rose-400" : "text-rose-600"}`}>{totalTidakLulus}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className={isDarkActive ? "text-slate-500" : "text-slate-405"}>Total:</span>
+                            <span className={`font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>{totalSiswa}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Visualizer card 2: Class level analysis */}
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Statistik Per Rombel Kelas</h3>
+                    <div className={`p-5 rounded-2xl space-y-4 border ${isDarkActive ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200 shadow-sm"}`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Statistik Per Rombel Kelas</h3>
                       <div className="space-y-3 py-2 max-h-48 overflow-y-auto pr-1">
                         {classFilterOptions.map(clsName => {
                           const clsSiswa = adminStudents.filter(s => s.className === clsName);
@@ -1936,10 +2159,10 @@ export default function App() {
                           return (
                             <div key={clsName} className="space-y-1.5">
                               <div className="flex items-center justify-between text-xs">
-                                <span className="font-bold text-slate-200">{clsName}</span>
-                                <span className="text-slate-400">{clsPass} / {clsSiswa.length} Siswa ({ratio.toFixed(0)}%)</span>
+                                <span className={`font-bold ${isDarkActive ? "text-slate-200" : "text-slate-700"}`}>{clsName}</span>
+                                <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>{clsPass} / {clsSiswa.length} Siswa ({ratio.toFixed(0)}%)</span>
                               </div>
-                              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                              <div className={`h-2 w-full rounded-full overflow-hidden ${isDarkActive ? "bg-white/5" : "bg-slate-100"}`}>
                                 <div 
                                   className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
                                   style={{ width: `${ratio}%` }}
@@ -1953,10 +2176,12 @@ export default function App() {
                   </div>
 
                   {/* Audit details footer */}
-                  <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-wrap gap-4 justify-between items-center text-xs">
-                    <span className="text-slate-400">Status Database: <span className="text-emerald-400 font-bold">Terhubung</span></span>
-                    <span className="text-slate-400">Tahun Ajaran Aktif: <span className="text-cyan-400 font-bold">{settings?.academicYear}</span></span>
-                    <span className="text-slate-500">Backup terintegrasi dan siap diekspor.</span>
+                  <div className={`p-4 rounded-2xl flex flex-wrap gap-4 justify-between items-center text-xs border ${
+                    isDarkActive ? "bg-white/5 border-white/5" : "bg-slate-100/50 border-slate-200"
+                  }`}>
+                    <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>Status Database: <span className={`font-bold ${isDarkActive ? "text-emerald-400" : "text-emerald-600"}`}>Terhubung</span></span>
+                    <span className={isDarkActive ? "text-slate-400" : "text-slate-500"}>Tahun Ajaran Aktif: <span className={`font-bold ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>{settings?.academicYear}</span></span>
+                    <span className={isDarkActive ? "text-slate-500" : "text-slate-400"}>Backup terintegrasi dan siap diekspor.</span>
                   </div>
                 </div>
               )}
@@ -1964,30 +2189,34 @@ export default function App() {
               {/* 2. DATA SISWA CRUD PANEL */}
               {activeAdminTab === "students" && (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div className={`flex flex-wrap items-center justify-between gap-4 border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Manajemen Database Siswa</h2>
-                      <p className="text-xs text-slate-400 mt-1">Kelola data individual siswa, import, export, dan status kelulusan siber.</p>
+                      <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Manajemen Database Siswa</h2>
+                      <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Kelola data individual siswa, import, export, dan status kelulusan siber.</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
                       <button
                         onClick={handleExportStudentsCsv}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition"
+                        className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl text-slate-300 transition ${
+                          isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
+                        }`}
                       >
                         <Download size={14} />
                         <span>Export CSV (Excel)</span>
                       </button>
                       <button
                         onClick={() => setShowBulkImport(!showBulkImport)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition"
+                        className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl text-slate-300 transition ${
+                          isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
+                        }`}
                       >
                         <Upload size={14} />
                         <span>Import Massal</span>
                       </button>
                       <button
                         onClick={() => { setSelectedStudent(null); setIsStudentModalOpen(true); }}
-                        className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-xs font-semibold rounded-xl text-white transition shadow"
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-xs font-semibold rounded-xl text-white transition shadow cursor-pointer"
                       >
                         <Plus size={14} />
                         <span>Tambah Siswa</span>
@@ -1997,10 +2226,12 @@ export default function App() {
 
                   {/* Bulk Import panel wrapper */}
                   {showBulkImport && (
-                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
                       <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Import Massal Siswa Baru</h3>
-                        <p className="text-slate-400 text-[10px] mt-1 leading-normal">
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Massal Siswa Baru</h3>
+                        <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                           Masukkan array data JSON valid berisi struktur siswa OR salinkan baris CSV format: <span className="font-mono text-cyan-400">nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status</span> (Baris baru untuk records berikutnya).
                         </p>
                       </div>
@@ -2010,7 +2241,9 @@ export default function App() {
                       )}
 
                       <textarea
-                        className="w-full bg-slate-950 border border-white/15 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-mono h-32 focus:outline-none transition"
+                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
+                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         placeholder='Contoh CSV:&#10;0081234569,220109,Galih Sugiarto,Laki-laki,XII MIPA 3,Bandung,2008-01-20,Lulus&#10;0081234570,220110,Hesti Wulandari,Perempuan,XII MIPA 3,Surabaya,2008-04-14,Lulus'
                         value={bulkImportText}
                         onChange={e => setBulkImportText(e.target.value)}
@@ -2019,13 +2252,17 @@ export default function App() {
                       <div className="flex justify-end gap-3">
                         <button 
                           onClick={() => { setShowBulkImport(false); setBulkImportText(""); setImportFeedback(""); }}
-                          className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-400 hover:text-white"
+                          className={`px-3 py-1.5 rounded-lg text-xs transition ${
+                            isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
+                          }`}
                         >
                           Batal
                         </button>
                         <button
                           onClick={handleBulkImport}
-                          className="px-4 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-cyan-600 transition"
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                          }`}
                         >
                           Proses Data Import
                         </button>
@@ -2034,12 +2271,16 @@ export default function App() {
                   )}
 
                   {/* Filters Search controls */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <div className={`grid grid-cols-1 md:grid-cols-4 gap-3 p-4 rounded-2xl border ${
+                    isDarkActive ? "bg-white/5 border-white/5" : "bg-white border-slate-200 shadow-sm"
+                  }`}>
                     <div className="relative">
                       <input
                         type="text"
                         placeholder="Cari nama, NISN, atau NIS..."
-                        className="w-full bg-slate-950 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition font-sans"
+                        className={`w-full border rounded-xl py-2 pl-9 pr-3 text-xs focus:outline-none transition font-sans ${
+                          isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         value={siswaSearchFilter}
                         onChange={e => setSiswaSearchFilter(e.target.value)}
                       />
@@ -2047,16 +2288,20 @@ export default function App() {
                     </div>
 
                     <select
-                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      className={`border rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                        isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                      }`}
                       value={siswaClassFilter}
                       onChange={e => setSiswaClassFilter(e.target.value)}
                     >
-                      <option value="">Semua Kelas Rombe</option>
+                      <option value="">Semua Kelas Rombel</option>
                       {classFilterOptions.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                     </select>
 
                     <select
-                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      className={`border rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                        isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                      }`}
                       value={siswaStatusFilter}
                       onChange={e => setSiswaStatusFilter(e.target.value)}
                     >
@@ -2067,16 +2312,22 @@ export default function App() {
                     </select>
 
                     <div className="text-right flex items-center justify-end">
-                      <span className="text-[11px] text-slate-400 font-mono">Ditemukan: <span className="font-bold text-white">{filteredStudentsList.length}</span> / {totalSiswa}</span>
+                      <span className={`text-[11px] font-mono ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                        Ditemukan: <span className={`font-bold ${isDarkActive ? "text-white" : "text-slate-850"}`}>{filteredStudentsList.length}</span> / {totalSiswa}
+                      </span>
                     </div>
                   </div>
 
                   {/* Students Table with CRUD links */}
-                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40">
+                  <div className={`border rounded-2xl overflow-hidden ${
+                    isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                  }`}>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-white/5 text-slate-400 border-b border-white/10 font-medium">
+                          <tr className={`font-medium border-b ${
+                            isDarkActive ? "bg-white/5 text-slate-400 border-white/10" : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}>
                             <th className="py-3 px-4">Foto / Profil</th>
                             <th className="py-3 px-4">NISN / NIS</th>
                             <th className="py-3 px-4">Jenis Kelamin</th>
@@ -2086,17 +2337,19 @@ export default function App() {
                             <th className="py-3 px-4 text-right w-24">Aksi</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className={`divide-y ${isDarkActive ? "divide-white/5" : "divide-slate-105"}`}>
                           {filteredStudentsList.length === 0 ? (
                             <tr>
                               <td colSpan={7} className="py-12 text-center text-slate-500 italic font-light">Tidak ada records siswa cocok dengan filter pencarian.</td>
                             </tr>
                           ) : (
                             filteredStudentsList.map(s => (
-                              <tr key={s.nisn} className="hover:bg-white/5 group transition">
+                              <tr key={s.nisn} className={`group transition ${isDarkActive ? "hover:bg-white/5" : "hover:bg-slate-50/50"}`}>
                                 <td className="py-2.5 px-4">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 bg-slate-800 flex-shrink-0 flex items-center justify-center">
+                                    <div className={`w-8 h-8 rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center ${
+                                      isDarkActive ? "border-white/10 bg-slate-800" : "border-slate-200 bg-slate-100"
+                                    }`}>
                                       {s.photoUrl ? (
                                         <img 
                                           src={s.photoUrl} 
@@ -2108,17 +2361,17 @@ export default function App() {
                                         <span className="text-[9px] font-bold text-slate-500">{s.name.charAt(0)}</span>
                                       )}
                                     </div>
-                                    <span className="font-bold text-white capitalize text-xs tracking-wide">{s.name}</span>
+                                    <span className={`font-bold capitalize text-xs tracking-wide ${isDarkActive ? "text-white" : "text-slate-850"}`}>{s.name}</span>
                                   </div>
                                 </td>
-                                <td className="py-2.5 px-4 font-mono font-medium text-slate-300">
-                                  {s.nisn} / <span className="text-slate-500">{s.nis}</span>
+                                <td className={`py-2.5 px-4 font-mono font-medium ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>
+                                  {s.nisn} / <span className="text-slate-550">{s.nis}</span>
                                 </td>
-                                <td className="py-2.5 px-4 text-slate-400">{s.gender}</td>
-                                <td className="py-2.5 px-4 text-slate-400 shrink-0 font-mono text-[11px]">
+                                <td className={`py-2.5 px-4 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>{s.gender}</td>
+                                <td className={`py-2.5 px-4 shrink-0 font-mono text-[11px] ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                                   {s.birthPlace || "Jakarta"}, {s.birthDate}
                                 </td>
-                                <td className="py-2.5 px-4 text-slate-300 font-semibold">{s.className}</td>
+                                <td className={`py-2.5 px-4 font-semibold ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>{s.className}</td>
                                 <td className="py-2.5 px-4 text-center">
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                     s.status === "Lulus" 
@@ -2161,49 +2414,57 @@ export default function App() {
               {/* 3. MATA PELAJARAN TAB */}
               {activeAdminTab === "subjects" && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">KKM Mata Pelajaran</h2>
-                    <p className="text-xs text-slate-400 mt-1">Atur kriteria kelayakan kompetensi dasar (KKM) untuk memilah status leger dokumen SKL.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>KKM Mata Pelajaran</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-50s"}`}>Atur kriteria kelayakan kompetensi dasar (KKM) untuk memilah status leger dokumen SKL.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Add subject form left side */}
-                    <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-white">Masukkan Mapel Baru</h3>
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Masukkan Mapel Baru</h3>
                       
                       <form onSubmit={handleSaveSubject} className="space-y-4">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Kode Mapel (Singkatan)</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Kode Mapel (Singkatan)</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: MAT, IND, FIS"
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition font-sans uppercase"
+                            className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none transition font-sans uppercase ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={newSubId}
                             onChange={e => setNewSubId(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Nama Lengkap Mata Pelajaran</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Nama Lengkap Mata Pelajaran</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: Matematika Peminatan"
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition font-sans"
+                            className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none transition font-sans ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={newSubName}
                             onChange={e => setNewSubName(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Batas Minimum KKM (0-100)</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Batas Minimum KKM (0-100)</label>
                           <input
                             type="number"
                             min={0}
                             max={100}
                             required
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition font-mono font-bold"
+                            className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none transition font-mono font-bold ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={newSubKkm}
                             onChange={e => setNewSubKkm(parseInt(e.target.value) || 0)}
                           />
@@ -2211,7 +2472,7 @@ export default function App() {
 
                         <button
                           type="submit"
-                          className="w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-90 transition"
+                          className="w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-90 transition shadow"
                         >
                           <Plus size={14} />
                           <span>TAMBAHKAN MAPEL</span>
@@ -2220,18 +2481,24 @@ export default function App() {
                     </div>
 
                     {/* Subjects list column right side */}
-                    <div className="md:col-span-2 border border-white/10 rounded-2xl p-5 bg-slate-950/40 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Daftar Aktif Mapel ({subjects.length})</h3>
+                    <div className={`md:col-span-2 border rounded-2xl p-5 space-y-4 ${
+                      isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Daftar Aktif Mapel ({subjects.length})</h3>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-1">
                         {subjects.map(s => (
-                          <div key={s.id} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between group">
+                          <div key={s.id} className={`p-3 border rounded-xl flex items-center justify-between group ${
+                            isDarkActive ? "bg-white/5 border-white/5" : "bg-slate-50 border-slate-100 shadow-sm"
+                          }`}>
                             <div>
                               <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-2">
                                 {s.id}
                               </span>
-                              <h4 className="text-white font-semibold text-xs leading-none">{s.name}</h4>
-                              <p className="text-[10px] text-slate-400 mt-1.5 font-mono">Target KKM: <span className="font-bold text-white">{s.kkm}</span></p>
+                              <h4 className={`font-semibold text-xs leading-none ${isDarkActive ? "text-white" : "text-slate-800"}`}>{s.name}</h4>
+                              <p className={`text-[10px] mt-1.5 font-mono ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                                Target KKM: <span className={`font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>{s.kkm}</span>
+                              </p>
                             </div>
                             <button
                               onClick={() => handleDeleteSubject(s.id)}
@@ -2251,16 +2518,18 @@ export default function App() {
               {activeAdminTab === "input-nilai" && (
                 <div className="space-y-6">
                   {/* Clean Page Title Header section */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div className={`flex flex-wrap items-center justify-between gap-4 border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Input & Edit Nilas Kompetensi</h2>
-                      <p className="text-xs text-slate-400 mt-1">Kelola dan input nilai rapor/Ujian Sekolah masing-masing siswa, atau import massal seluruh Mapel via CSV.</p>
+                      <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Input & Edit Nilai Kompetensi</h2>
+                      <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Kelola dan input nilai rapor/Ujian Sekolah masing-masing siswa, atau import massal seluruh Mapel via CSV.</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
                       <button
                         onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition cursor-pointer"
+                        className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl transition cursor-pointer ${
+                          isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
+                        }`}
                       >
                         <Upload size={14} />
                         <span>Import Nilai CSV</span>
@@ -2270,10 +2539,12 @@ export default function App() {
 
                   {/* Bulk Import panel wrapper inside Input Nilai view */}
                   {showGradesBulkImport && (
-                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
                       <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Import Nilai Siswa (CSV)</h3>
-                        <p className="text-slate-400 text-[10px] mt-1 leading-normal">
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa (CSV)</h3>
+                        <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                           Masukkan baris CSV dengan baris header mengandung <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
                         </p>
                       </div>
@@ -2283,7 +2554,9 @@ export default function App() {
                       )}
 
                       <textarea
-                        className="w-full bg-slate-950 border border-white/15 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-mono h-32 focus:outline-none transition"
+                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
+                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
                         value={bulkGradesImportText}
                         onChange={e => setBulkGradesImportText(e.target.value)}
@@ -2292,13 +2565,17 @@ export default function App() {
                       <div className="flex justify-end gap-3">
                         <button 
                           onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
-                          className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-400 hover:text-white"
+                          className={`px-3 py-1.5 rounded-lg text-xs transition ${
+                            isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
+                          }`}
                         >
                           Batal
                         </button>
                         <button
                           onClick={handleGradesBulkImport}
-                          className="px-4 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-cyan-600 transition"
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                          }`}
                         >
                           Proses Impor Nilai
                         </button>
@@ -2307,12 +2584,16 @@ export default function App() {
                   )}
 
                   {/* Search and class Filters panel */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 no-print">
+                  <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl border no-print ${
+                    isDarkActive ? "bg-white/5 border-white/5" : "bg-white border-slate-200 shadow-sm"
+                  }`}>
                     <div className="relative font-sans">
                       <input
                         type="text"
                         placeholder="Cari siswa berdasarkan nama, NISN, atau NIS..."
-                        className="w-full bg-slate-950 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition font-sans"
+                        className={`w-full border rounded-xl py-2 pl-9 pr-3 text-xs focus:outline-none transition font-sans ${
+                          isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         value={inputNilaiSearchFilter}
                         onChange={e => setInputNilaiSearchFilter(e.target.value)}
                       />
@@ -2320,7 +2601,9 @@ export default function App() {
                     </div>
 
                     <select
-                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      className={`border rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                        isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                      }`}
                       value={inputNilaiClassFilter}
                       onChange={e => setInputNilaiClassFilter(e.target.value)}
                     >
@@ -2329,17 +2612,23 @@ export default function App() {
                     </select>
 
                     <div className="text-right flex items-center justify-end font-mono">
-                      <span className="text-[11px] text-slate-400">Jumlah Siswa: <span className="font-bold text-white">{filteredInputNilaiList.length}</span></span>
+                      <span className={`text-[11px] ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                        Jumlah Siswa: <span className={`font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>{filteredInputNilaiList.length}</span>
+                      </span>
                     </div>
                   </div>
 
                   {/* Dedicated Input Nilai Student Cards Table List */}
-                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40">
+                  <div className={`border rounded-2xl overflow-hidden ${
+                    isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                  }`}>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-white/5 text-slate-400 border-b border-white/10 font-semibold font-sans">
-                            <th className="py-3.5 px-4 font-bold text-white">Identitas Siswa</th>
+                          <tr className={`border-b font-semibold font-sans ${
+                            isDarkActive ? "bg-white/5 text-slate-400 border-white/10" : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}>
+                            <th className={`py-3.5 px-4 font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Identitas Siswa</th>
                             <th className="py-3.5 px-4">Kelas</th>
                             <th className="py-3.5 px-4 text-center">Status Kelulusan</th>
                             <th className="py-3.5 px-4">Daftar Nilai Mapel</th>
@@ -2347,7 +2636,7 @@ export default function App() {
                             <th className="py-3.5 px-4 text-right w-36">Aksi</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5 font-sans">
+                        <tbody className={`divide-y font-sans ${isDarkActive ? "divide-white/5" : "divide-slate-200"}`}>
                           {filteredInputNilaiList.length === 0 ? (
                             <tr>
                               <td colSpan={6} className="py-12 text-center text-slate-500 italic font-light">Tidak ada data siswa ditemukan untuk di-input nilainya.</td>
@@ -2360,14 +2649,14 @@ export default function App() {
                               const gradedCount = subjects.filter(sub => student.grades && student.grades[sub.id] !== undefined).length;
                               
                               return (
-                                <tr key={student.nisn} className="hover:bg-white/5 transition group">
+                                <tr key={student.nisn} className={`transition group ${isDarkActive ? "hover:bg-white/5" : "hover:bg-slate-50/50"}`}>
                                   <td className="py-3 px-4">
-                                    <div className="font-bold text-white capitalize leading-tight">{student.name}</div>
-                                    <div className="text-[10px] text-slate-400 mt-1 font-mono">
+                                    <div className={`font-bold capitalize leading-tight ${isDarkActive ? "text-white" : "text-slate-800"}`}>{student.name}</div>
+                                    <div className={`text-[10px] mt-1 font-mono ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                                       NISN: {student.nisn} | NIS: {student.nis}
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4 text-slate-300 font-medium">{student.className}</td>
+                                  <td className={`py-3 px-4 font-medium ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>{student.className}</td>
                                   <td className="py-3 px-4 text-center">
                                     <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                       student.status === GraduationStatus.LULUS 
@@ -2390,10 +2679,10 @@ export default function App() {
                                             key={s.id} 
                                             className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
                                               score === undefined 
-                                                ? "bg-slate-900 border-white/5 text-slate-500" 
+                                                ? (isDarkActive ? "bg-slate-100/5 bg-slate-900 border-white/5 text-slate-500" : "bg-slate-100 border-slate-205 text-slate-400")
                                                 : isBelowKkm 
-                                                ? "bg-rose-500/10 border-rose-500/20 text-rose-400 font-bold" 
-                                                : "bg-cyan-500/10 border-cyan-500/25 text-cyan-400 font-semibold"
+                                                ? "bg-rose-500/10 border-rose-500/20 text-rose-600 font-bold" 
+                                                : "bg-cyan-500/10 border-cyan-500/25 text-cyan-600 font-semibold"
                                             }`}
                                             title={`${s.name} (KKM: ${s.kkm})`}
                                           >
@@ -2402,19 +2691,19 @@ export default function App() {
                                         );
                                       })}
                                     </div>
-                                    <div className="text-[9px] text-slate-400 mt-1 font-medium font-sans">
+                                    <div className={`text-[9px] mt-1 font-medium font-sans ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                                       Terisi {gradedCount} dari {totalSubjects} Mata Pelajaran
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 text-center font-mono font-bold">
-                                    <span className={average >= 75 ? "text-emerald-400" : "text-amber-400"}>
+                                    <span className={average >= 75 ? (isDarkActive ? "text-emerald-400" : "text-emerald-600") : (isDarkActive ? "text-amber-400" : "text-amber-600")}>
                                       {average.toFixed(2)}
                                     </span>
                                   </td>
                                   <td className="py-3 px-4 text-right">
                                     <button
                                       onClick={() => { setSelectedGradeStudent(student); setIsGradeModalOpen(true); }}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/40 rounded-xl text-xs font-semibold cursor-pointer transition shadow"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 hover:text-cyan-600 border border-cyan-500/20 hover:border-cyan-500/40 rounded-xl text-xs font-semibold cursor-pointer transition shadow"
                                     >
                                       <Edit2 size={12} />
                                       <span>Input Nilai</span>
@@ -2430,15 +2719,14 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              {/* 4. LEGER NILAI & DATA MASTER TAB */}
+                  {/* 4. LEGER NILAI & DATA MASTER TAB */}
               {activeAdminTab === "grades" && (
                 <div className="space-y-6">
                   {/* Clean Page Title Header section */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div className={`flex flex-wrap items-center justify-between gap-4 border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Pratinjau Leger Nilai & Kompetensi</h2>
-                      <p className="text-xs text-slate-400 mt-1">Review ledger transkrip kelulusan siswa, rata-rata kompetensi ujian, cetak leger per kelas, atau import transkrip nilai.</p>
+                      <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Pratinjau Leger Nilai & Kompetensi</h2>
+                      <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Review ledger transkrip kelulusan siswa, rata-rata kompetensi ujian, cetak leger per kelas, atau import transkrip nilai.</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
@@ -2451,7 +2739,9 @@ export default function App() {
                       </button>
                       <button
                         onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition"
+                        className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl transition ${
+                          isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
+                        }`}
                       >
                         <Upload size={14} />
                         <span>Import Nilai CSV</span>
@@ -2461,10 +2751,12 @@ export default function App() {
 
                   {/* Bulk Import panel wrapper for grades */}
                   {showGradesBulkImport && (
-                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
                       <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Import Nilai Siswa Baru (CSV)</h3>
-                        <p className="text-slate-400 text-[10px] mt-1 leading-normal">
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa Baru (CSV)</h3>
+                        <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                           Gunakan baris CSV yang memiliki baris header berisi <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
                         </p>
                       </div>
@@ -2474,7 +2766,9 @@ export default function App() {
                       )}
 
                       <textarea
-                        className="w-full bg-slate-950 border border-white/15 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-mono h-32 focus:outline-none transition"
+                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
+                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
                         value={bulkGradesImportText}
                         onChange={e => setBulkGradesImportText(e.target.value)}
@@ -2483,27 +2777,35 @@ export default function App() {
                       <div className="flex justify-end gap-3">
                         <button 
                           onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
-                          className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-400 hover:text-white"
+                          className={`px-3 py-1.5 rounded-lg text-xs transition ${
+                            isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
+                          }`}
                         >
                           Batal
                         </button>
                         <button
                           onClick={handleGradesBulkImport}
-                          className="px-4 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-cyan-600 transition"
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                          }`}
                         >
-                          Proses Impor Nilas
+                          Proses Impor Nilai
                         </button>
                       </div>
                     </div>
                   )}
 
                   {/* Search and class Filters panel */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 no-print">
+                  <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl border no-print ${
+                    isDarkActive ? "bg-white/5 border-white/5" : "bg-white border-slate-200 shadow-sm"
+                  }`}>
                     <div className="relative">
                       <input
                         type="text"
                         placeholder="Cari siswa, NISN, atau NIS..."
-                        className="w-full bg-slate-950 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition font-sans"
+                        className={`w-full border rounded-xl py-2 pl-9 pr-3 text-xs focus:outline-none transition font-sans ${
+                          isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                        }`}
                         value={gradesSearchFilter}
                         onChange={e => setGradesSearchFilter(e.target.value)}
                       />
@@ -2511,7 +2813,9 @@ export default function App() {
                     </div>
 
                     <select
-                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      className={`border rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                        isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                      }`}
                       value={gradesClassFilter}
                       onChange={e => setGradesClassFilter(e.target.value)}
                     >
@@ -2520,16 +2824,22 @@ export default function App() {
                     </select>
 
                     <div className="text-right flex items-center justify-end">
-                      <span className="text-[11px] text-slate-400 font-mono">Records: <span className="font-bold text-white">{filteredGradesList.length}</span> cocok</span>
+                      <span className={`text-[11px] font-mono ${isDarkActive ? "text-slate-400" : "text-slate-505"}`}>
+                        Records: <span className={`font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>{filteredGradesList.length}</span> cocok
+                      </span>
                     </div>
                   </div>
 
                   {/* Dynamic Master ledger screen table layout */}
-                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40 no-print">
+                  <div className={`border rounded-2xl overflow-hidden no-print ${
+                    isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                  }`}>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-white/5 text-slate-400 border-b border-white/10 font-medium">
+                          <tr className={`font-medium border-b ${
+                            isDarkActive ? "bg-white/5 text-slate-400 border-white/10" : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}>
                             <th className="py-3 px-4">Nama Siswa</th>
                             <th className="py-3 px-4">Kelas Rombel</th>
                             {subjects.map(s => (
@@ -2543,7 +2853,7 @@ export default function App() {
                             <th className="py-3 px-4 text-right w-16">Aksi</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className={`divide-y ${isDarkActive ? "divide-white/5" : "divide-slate-200"}`}>
                           {filteredGradesList.length === 0 ? (
                             <tr>
                               <td colSpan={subjects.length + 5} className="py-12 text-center text-slate-500 italic font-light">Tidak ada records leger nilai terdaftar.</td>
@@ -2553,9 +2863,9 @@ export default function App() {
                               const totalGrade = subjects.reduce((a, s) => a + (student.grades ? student.grades[s.id] || 0 : 0), 0);
                               const average = totalGrade / (subjects.length || 1);
                               return (
-                                <tr key={student.nisn} className="hover:bg-white/5 transition group">
-                                  <td className="py-3 px-4 font-bold text-white capitalize">{student.name}</td>
-                                  <td className="py-3 px-4 text-slate-400 font-medium">{student.className}</td>
+                                <tr key={student.nisn} className={`transition group ${isDarkActive ? "hover:bg-white/5" : "hover:bg-slate-50/50"}`}>
+                                  <td className={`py-3 px-4 font-bold capitalize ${isDarkActive ? "text-white" : "text-slate-800"}`}>{student.name}</td>
+                                  <td className={`py-3 px-4 font-medium ${isDarkActive ? "text-slate-400" : "text-slate-700"}`}>{student.className}</td>
                                   {subjects.map(s => {
                                     const score = student.grades ? student.grades[s.id] || 0 : 0;
                                     const isBelow = score < s.kkm;
@@ -2563,21 +2873,21 @@ export default function App() {
                                       <td 
                                         key={s.id} 
                                         className={`py-3 px-3 text-center font-mono font-bold text-[11px] ${
-                                          isBelow ? 'text-rose-400 bg-rose-500/5' : 'text-slate-300'
+                                          isBelow ? 'text-rose-600 bg-rose-500/5' : (isDarkActive ? 'text-slate-300' : 'text-slate-700')
                                         }`}
                                       >
                                         {score}
                                       </td>
                                     );
                                   })}
-                                  <td className="py-3 px-4 text-center font-mono font-extrabold text-cyan-400 bg-cyan-400/5">{average.toFixed(2)}</td>
+                                  <td className={`py-3 px-4 text-center font-mono font-extrabold ${isDarkActive ? "text-cyan-400 bg-cyan-400/5" : "text-blue-600 bg-blue-50"}`}>{average.toFixed(2)}</td>
                                   <td className="py-3 px-4 text-center">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                       student.status === "Lulus" 
-                                        ? "bg-emerald-500/10 text-emerald-400" 
+                                        ? "bg-emerald-500/10 text-emerald-600" 
                                         : student.status === "Lulus Bersyarat" 
-                                        ? "bg-amber-500/10 text-amber-400" 
-                                        : "bg-rose-500/10 text-rose-400"
+                                        ? "bg-amber-500/10 text-amber-600" 
+                                        : "bg-rose-500/10 text-rose-600"
                                     }`}>
                                       {student.status}
                                     </span>
@@ -2585,7 +2895,7 @@ export default function App() {
                                   <td className="py-3 px-4 text-right">
                                     <button
                                       onClick={() => { setSelectedGradeStudent(student); setIsGradeModalOpen(true); }}
-                                      className="p-1.5 hover:bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition opacity-80 group-hover:opacity-100"
+                                      className="p-1.5 hover:bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 rounded-lg transition opacity-80 group-hover:opacity-100"
                                       title="Input / Edit Nilai Siswa"
                                     >
                                       <Award size={14} />
@@ -2662,35 +2972,41 @@ export default function App() {
               {/* Form SKL - Draft Customize Editor */}
               {activeAdminTab === "skl" && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Draft & Desain KOP Surat SKL</h2>
-                    <p className="text-xs text-slate-400 mt-1">Sesuaikan konten draf Surat Keterangan Lulus (SKL), logo instansi kemendikbud (kiri) & logo sekolah (kanan), format nomor otomatis, dan unggah e-tanda tangan digital.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Draft & Desain KOP Surat SKL</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Sesuaikan konten draf Surat Keterangan Lulus (SKL), logo instansi kemendikbud (kiri) & logo sekolah (kanan), format nomor otomatis, dan unggah e-tanda tangan digital.</p>
                   </div>
 
-                  <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 text-xs bg-slate-900/10 p-1">
+                  <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 text-xs bg-transparent p-1">
                     {/* Left Column Config fields */}
-                    <div className="md:col-span-7 space-y-5 p-5 rounded-2xl bg-slate-900/40 border border-white/10">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Parameter KOP Surat & Redaksi</h3>
+                    <div className={`md:col-span-7 space-y-5 p-5 rounded-2xl border ${
+                      isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>Parameter KOP Surat & Redaksi</h3>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-400 mb-1.5">Nama Instansi Sekolah *</label>
+                          <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Nama Instansi Sekolah *</label>
                           <input
                             type="text"
                             required
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={formSchoolName}
                             onChange={e => setFormSchoolName(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-slate-400 mb-1.5">Tahun Pelajaran *</label>
+                          <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Tahun Pelajaran *</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: 2025/2026"
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={formAcademicYear}
                             onChange={e => setFormAcademicYear(e.target.value)}
                           />
@@ -2698,11 +3014,13 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block text-slate-400 mb-1.5">Alamat Surat Sekolah</label>
+                        <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Alamat Surat Sekolah</label>
                         <input
                           type="text"
                           required
-                          className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                          className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                            isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                          }`}
                           value={formAddress}
                           onChange={e => setFormAddress(e.target.value)}
                         />
@@ -2710,22 +3028,26 @@ export default function App() {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-400 mb-1.5 font-mono">Email Surat Resmi</label>
+                          <label className={`block mb-1.5 font-mono ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Email Surat Resmi</label>
                           <input
                             type="email"
                             required
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={formEmail}
                             onChange={e => setFormEmail(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-slate-400 mb-1.5 font-mono">No. Telepon / Fax</label>
+                          <label className={`block mb-1.5 font-mono ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>No. Telepon / Fax</label>
                           <input
                             type="text"
                             required
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={formPhone}
                             onChange={e => setFormPhone(e.target.value)}
                           />
@@ -2733,47 +3055,55 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block text-slate-400 mb-1.5 font-mono">Template Penomoran SKL (Otomatis)</label>
+                        <label className={`block mb-1.5 font-mono ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Template Penomoran SKL (Otomatis)</label>
                         <input
                           type="text"
                           required
                           placeholder="Nomor: 421.3/ {academicYear} /SMAN1/SKL"
-                          className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white font-mono focus:outline-none transition"
+                          className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 font-mono focus:outline-none transition ${
+                            isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                          }`}
                           value={formSklNumberTemplate}
                           onChange={e => setFormSklNumberTemplate(e.target.value)}
                         />
-                        <span className="text-[10px] text-slate-500 block mt-1">Gunakan token <span className="font-mono text-cyan-400">{`{academicYear}`}</span> untuk menyisipkan tahun pelajaran saat ini secara otomatis.</span>
+                        <span className={`text-[10px] block mt-1 ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>Gunakan token <span className={`font-mono ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>{`{academicYear}`}</span> untuk menyisipkan tahun pelajaran saat ini secara otomatis.</span>
                       </div>
 
                       <div>
-                        <label className="block text-slate-400 mb-1.5 font-sans">Sandi Redaksi Pembuka Dokumen SKL *</label>
+                        <label className={`block mb-1.5 font-sans ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Sandi Redaksi Pembuka Dokumen SKL *</label>
                         <textarea
                           required
-                          className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl p-3 text-white h-24 focus:outline-none transition"
+                          className={`w-full border focus:border-cyan-500/50 rounded-xl p-3 h-24 focus:outline-none transition ${
+                            isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                          }`}
                           value={formTemplateText}
                           onChange={e => setFormTemplateText(e.target.value)}
                         />
-                        <span className="text-[10px] text-slate-500 block">Kalimat pembuka surat pernyataan kelulusan resmi.</span>
+                        <span className={`text-[10px] block ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>Kalimat pembuka surat pernyataan kelulusan resmi.</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-400 mb-1.5 font-sans">Tanggal Kelulusan (Tgl Surat)</label>
+                          <label className={`block mb-1.5 font-sans ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Tanggal Kelulusan (Tgl Surat)</label>
                           <input
                             type="date"
                             required
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white focus:outline-none transition"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-800 shadow-inner font-sans"
+                            }`}
                             value={formGradDate}
                             onChange={e => setFormGradDate(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-slate-400 mb-1.5 font-sans">Waktu Countdown Pengumuman</label>
+                          <label className={`block mb-1.5 font-sans ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Waktu Countdown Pengumuman</label>
                           <input
                             type="time"
                             required
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white focus:outline-none transition"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-800 shadow-inner font-sans"
+                            }`}
                             value={formGradTime}
                             onChange={e => setFormGradTime(e.target.value)}
                           />
@@ -2784,26 +3114,30 @@ export default function App() {
                     {/* Right Column Signature / Logos upload triggers */}
                     <div className="md:col-span-5 space-y-5 flex flex-col">
                       {/* Logo Configuration Blocks */}
-                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Konfigurasi Visual Logo KOP</h4>
+                      <div className={`p-5 rounded-2xl border space-y-4 ${
+                        isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                      }`}>
+                        <h4 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>Konfigurasi Visual Logo KOP</h4>
                         
                         {/* Logo Left Spot */}
                         <div className="space-y-2">
-                          <label className="block text-slate-400">Logo Instansi Kiri (Default: Logo Tut Wuri / Kemendikbud)</label>
+                          <label className={`block ${isDarkActive ? "text-slate-400" : "text-slate-650"}`}>Logo Instansi Kiri (Default: Logo Tut Wuri / Kemendikbud)</label>
                           <div className="flex items-center gap-3">
-                            <img src={formSchoolLogo || "https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_Tut_Wuri_Handayani.png"} alt="Left Logo" className="w-12 h-12 object-contain bg-slate-950 p-1.5 border border-white/10 rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                            <img src={formSchoolLogo || "https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_Tut_Wuri_Handayani.png"} alt="Left Logo" className={`w-12 h-12 object-contain p-1.5 border rounded-lg shrink-0 ${isDarkActive ? "bg-slate-950 border-white/10" : "bg-white border-slate-200"}`} referrerPolicy="no-referrer" />
                             <div className="space-y-1.5 flex-1">
                               <input
                                 type="text"
                                 placeholder="Tautan Logo URL"
-                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                className={`w-full border rounded-xl px-3 py-1.5 focus:outline-none font-mono text-[10px] ${
+                                  isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-805 focus:border-blue-500/50 shadow-inner"
+                                }`}
                                 value={formSchoolLogo}
                                 onChange={e => setFormSchoolLogo(e.target.value)}
                               />
                               <input 
                                 type="file" 
                                 accept="image/*" 
-                                className="text-[10px] text-slate-400 block"
+                                className={`text-[10px] block ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files[0]) {
                                     const reader = new FileReader();
@@ -2820,21 +3154,23 @@ export default function App() {
 
                         {/* Logo Right Spot */}
                         <div className="space-y-2">
-                          <label className="block text-slate-400">Logo Sekolah Kanan (Default: Kosong / Dapat diisi logo Sklh)</label>
+                          <label className={`block ${isDarkActive ? "text-slate-400" : "text-slate-650"}`}>Logo Sekolah Kanan (Default: Kosong / Dapat diisi logo Sklh)</label>
                           <div className="flex items-center gap-3">
-                            <img src={formSchoolLogoRight || "https://placehold.co/100x100?text=Logo+Kanan"} alt="Right Logo" className="w-12 h-12 object-contain bg-slate-950 p-1.5 border border-white/10 rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                            <img src={formSchoolLogoRight || "https://placehold.co/100x100?text=Logo+Kanan"} alt="Right Logo" className={`w-12 h-12 object-contain p-1.5 border rounded-lg shrink-0 ${isDarkActive ? "bg-slate-950 border-white/10" : "bg-white border-slate-200"}`} referrerPolicy="no-referrer" />
                             <div className="space-y-1.5 flex-1">
                               <input
                                 type="text"
                                 placeholder="Tautan Logo URL"
-                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                className={`w-full border rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px] ${
+                                  isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-805"
+                                }`}
                                 value={formSchoolLogoRight}
                                 onChange={e => setFormSchoolLogoRight(e.target.value)}
                               />
                               <input 
                                 type="file" 
                                 accept="image/*" 
-                                className="text-[10px] text-slate-400 block"
+                                className={`text-[10px] block ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files[0]) {
                                     const reader = new FileReader();
@@ -2851,27 +3187,33 @@ export default function App() {
                       </div>
 
                       {/* Headmaster and e-TTD settings block */}
-                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4 flex-1">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Tanda Tangan Kepala Sekolah</h4>
+                      <div className={`p-5 rounded-2xl border space-y-4 flex-1 ${
+                        isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                      }`}>
+                        <h4 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>Tanda Tangan Kepala Sekolah</h4>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Nama Lengkap Kepala Sekolah *</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Nama Lengkap Kepala Sekolah *</label>
                             <input
                               type="text"
                               required
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              className={`w-full border rounded-xl px-3 py-2 text-white focus:outline-none transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-805 shadow-inner"
+                              }`}
                               value={formPrincipalName}
                               onChange={e => setFormPrincipalName(e.target.value)}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-slate-400 mb-1.5">NIP Kepala Sekolah *</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>NIP Kepala Sekolah *</label>
                             <input
                               type="text"
                               required
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50 font-mono"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none font-mono ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-805 shadow-inner"
+                              }`}
                               value={formPrincipalNip}
                               onChange={e => setFormPrincipalNip(e.target.value)}
                             />
@@ -2880,9 +3222,11 @@ export default function App() {
 
                         {/* E-Signature upload widget */}
                         <div className="space-y-2">
-                          <label className="block text-slate-400">Berkas E-Tanda Tangan (PNG Transparan Sangat Direkomendasikan)</label>
+                          <label className={`block ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Berkas E-Tanda Tangan (PNG Transparan Sangat Direkomendasikan)</label>
                           <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 bg-slate-950/80 border border-white/10 rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                            <div className={`w-16 h-16 border rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0 ${
+                              isDarkActive ? "bg-slate-950 border-white/10" : "bg-slate-50 border-slate-202"
+                            }`}>
                               {formSignatureImage ? (
                                 <img src={formSignatureImage} alt="E-Signature" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
                               ) : (
@@ -2893,14 +3237,16 @@ export default function App() {
                               <input
                                 type="text"
                                 placeholder="URL Tanda Tangan"
-                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                className={`w-full border rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px] ${
+                                  isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-805"
+                                }`}
                                 value={formSignatureImage}
                                 onChange={e => setFormSignatureImage(e.target.value)}
                               />
                               <input 
                                 type="file" 
                                 accept="image/*" 
-                                className="text-[10px] text-slate-400 block"
+                                className={`text-[10px] block ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files[0]) {
                                     const reader = new FileReader();
@@ -2915,13 +3261,15 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                          <div className="text-[10px] text-slate-400 italic">
+                        <div className={`pt-4 border-t flex items-center justify-between ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                          <div className={`text-[10px] italic ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
                             Tanpa stempel overlay di bagian ttd sesuai instruksi.
                           </div>
                           <button
                             type="submit"
-                            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition shadow"
+                            className={`px-6 py-2 rounded-xl text-xs font-bold cursor-pointer transition shadow ${
+                              isDarkActive ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-slate-950" : "bg-blue-600 hover:bg-blue-700 text-white"
+                            }`}
                           >
                             SIMPAN DRAF SKL
                           </button>
@@ -2935,23 +3283,25 @@ export default function App() {
               {/* 5. ANNOUNCEMENTS TAB WITH AI GENERATOR CO-PILOT */}
               {activeAdminTab === "announcements" && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Berita & Pengumuman Sekolah</h2>
-                    <p className="text-xs text-slate-400 mt-1">Publish pengumuman tata kelola kesiswaan, pengambilan berkas SKL, dibantu naskah AI asisten.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Berita & Pengumuman Sekolah</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Publish pengumuman tata kelola kesiswaan, pengambilan berkas SKL, dibantu naskah AI asisten.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Notice authoring space */}
-                    <div className="md:col-span-5 p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
+                    <div className={`md:col-span-5 p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>
                           {annId ? "Revisi/Edit Pengumuman" : "Buat Notice Pengumuman Baru"}
                         </h3>
                         {annId && (
                           <button 
                             type="button" 
                             onClick={() => { setAnnId(""); setAnnTitle(""); setAnnContent(""); }}
-                            className="text-[10px] text-cyan-400 hover:underline"
+                            className={`text-[10px] hover:underline ${isDarkActive ? "text-cyan-400" : "text-blue-500"}`}
                           >
                             Reset Form
                           </button>
@@ -2959,8 +3309,14 @@ export default function App() {
                       </div>
 
                       {/* GEMINI AI ASSIST WRITER (Major Capability) */}
-                      <div className="p-3 bg-gradient-to-r from-indigo-500/10 to-blue-500/5 border border-indigo-500/20 rounded-xl space-y-2">
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">
+                      <div className={`p-3 border rounded-xl space-y-2 ${
+                        isDarkActive 
+                          ? "from-indigo-500/10 to-blue-500/5 bg-gradient-to-r border-indigo-500/20" 
+                          : "bg-indigo-50/50 border-indigo-200"
+                      }`}>
+                        <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest leading-none ${
+                          isDarkActive ? "text-indigo-400" : "text-indigo-610"
+                        }`}>
                           <Sparkles size={12} />
                           <span>Gemini AI Penulis Pengumuman</span>
                         </span>
@@ -2968,7 +3324,9 @@ export default function App() {
                           <input
                             type="text"
                             placeholder="Contoh: Jadwal her-registrasi PPDB"
-                            className="bg-slate-950 border border-white/10 focus:border-indigo-500/50 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none flex-grow"
+                            className={`border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none flex-grow ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-indigo-500/50" : "bg-white border-slate-200 text-slate-800 focus:border-blue-500/50"
+                            }`}
                             value={aiTopicInput}
                             onChange={e => setAiTopicInput(e.target.value)}
                           />
@@ -2985,23 +3343,27 @@ export default function App() {
 
                       <form onSubmit={handleSaveAnnouncement} className="space-y-4">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Judul Pengumuman</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Judul Pengumuman</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: Jadwal Pembagian Berkas SKL"
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition font-sans"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs focus:outline-none transition font-sans ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-850"
+                            }`}
                             value={annTitle}
                             onChange={e => setAnnTitle(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Konten Teks HTML</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Konten Teks HTML</label>
                           <textarea
                             required
                             placeholder="Isi berita pengumuman..."
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-sans h-44 focus:outline-none transition leading-relaxed"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl p-3 text-xs font-sans h-44 focus:outline-none transition leading-relaxed ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-850"
+                            }`}
                             value={annContent}
                             onChange={e => setAnnContent(e.target.value)}
                           />
@@ -3009,9 +3371,11 @@ export default function App() {
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[11px] text-slate-400 mb-1.5">Status Draft / Publish</label>
+                            <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Status Draft / Publish</label>
                             <select
-                              className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition"
+                              className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-850"
+                              }`}
                               value={annStatus}
                               onChange={e => setAnnStatus(e.target.value as any)}
                             >
@@ -3023,7 +3387,9 @@ export default function App() {
                           <div className="flex items-end">
                             <button
                               type="submit"
-                              className="w-full py-2 bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs hover:bg-cyan-500 transition cursor-pointer"
+                              className={`w-full py-2 font-bold rounded-xl text-xs transition cursor-pointer ${
+                                isDarkActive ? "bg-cyan-400 text-slate-950 hover:bg-cyan-500" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                              }`}
                             >
                               SUBMIT POST
                             </button>
@@ -3033,12 +3399,16 @@ export default function App() {
                     </div>
 
                     {/* Announcement Lists view right */}
-                    <div className="md:col-span-7 border border-white/10 rounded-2xl p-5 bg-slate-950/40 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Arsip Pengumuman Aktif ({adminAnnouncements.length})</h3>
+                    <div className={`md:col-span-7 border rounded-2xl p-5 space-y-4 ${
+                      isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Arsip Pengumuman Aktif ({adminAnnouncements.length})</h3>
                       
                       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                         {adminAnnouncements.map(ann => (
-                          <div key={ann.id} className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-2 group">
+                          <div key={ann.id} className={`p-4 border rounded-xl space-y-2 group ${
+                            isDarkActive ? "bg-white/5 border-white/5" : "bg-slate-50/50 border-slate-100"
+                          }`}>
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] font-mono text-slate-500">
                                 {new Date(ann.createdAt).toLocaleDateString("id-ID", { dateStyle: "medium" })}
@@ -3057,14 +3427,14 @@ export default function App() {
                                     setAnnContent(ann.content);
                                     setAnnStatus(ann.status);
                                   }}
-                                  className="p-1 hover:bg-white/5 text-slate-400 hover:text-white rounded transition"
+                                  className={`p-1 rounded transition ${isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-200 text-slate-500 hover:text-slate-800"}`}
                                   title="Edit Post"
                                 >
                                   <Edit2 size={12} />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteAnnouncement(ann.id)}
-                                  className="p-1 hover:bg-white/5 text-slate-400 hover:text-rose-400 rounded transition"
+                                  className={`p-1 rounded transition ${isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-rose-400" : "hover:bg-slate-200 text-slate-500 hover:text-rose-600"}`}
                                   title="Delete Post"
                                 >
                                   <Trash2 size={12} />
@@ -3072,8 +3442,8 @@ export default function App() {
                               </div>
                             </div>
 
-                            <h4 className="text-white font-bold text-xs">{ann.title}</h4>
-                            <div className="text-[11px] text-slate-400 font-light truncate" dangerouslySetInnerHTML={{ __html: ann.content }} />
+                            <h4 className={`font-bold text-xs ${isDarkActive ? "text-white" : "text-slate-800"}`}>{ann.title}</h4>
+                            <div className={`text-[11px] font-light truncate ${isDarkActive ? "text-slate-400" : "text-slate-600"}`} dangerouslySetInnerHTML={{ __html: ann.content }} />
                           </div>
                         ))}
                       </div>
@@ -3085,45 +3455,53 @@ export default function App() {
               {/* 6. MANAJEMEN USER TAB */}
               {activeAdminTab === "users" && adminUser.role === UserRole.SUPER_ADMIN && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Kredensial Operator & Manajemen User</h2>
-                    <p className="text-xs text-slate-400 mt-1">Tambah akun login operator sistem sekunder yang membantu update nilai ledger harian.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Kredensial Operator & Manajemen User</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-550"}`}>Tambah akun login operator sistem sekunder yang membantu update nilai ledger harian.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Add User form columns left side */}
-                    <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-white">Daftarkan Admin/Operator</h3>
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Daftarkan Admin/Operator</h3>
                       
                       <form onSubmit={handleSaveUser} className="space-y-4">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Username Login</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Username Login</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: rahmat88"
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition lowercase"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs focus:outline-none transition lowercase ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-800"
+                            }`}
                             value={newUsername}
                             onChange={e => setNewUsername(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Nama Lengkap Pemegang Akun</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Nama Lengkap Pemegang Akun</label>
                           <input
                             type="text"
                             required
                             placeholder="Contoh: Drs. Rahmat Hidayat"
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-800"
+                            }`}
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1.5">Hak Akses Role</label>
+                          <label className={`block text-[11px] mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Hak Akses Role</label>
                           <select
-                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition"
+                            className={`w-full border focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-800"
+                            }`}
                             value={newUserRole}
                             onChange={e => setNewUserRole(e.target.value as any)}
                           >
@@ -3134,7 +3512,11 @@ export default function App() {
 
                         <button
                           type="submit"
-                          className="w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold rounded-xl text-xs hover:opacity-90 flex items-center justify-center gap-1 transition cursor-pointer"
+                          className={`w-full py-2 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition cursor-pointer ${
+                            isDarkActive 
+                              ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 hover:opacity-90" 
+                              : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                          }`}
                         >
                           <Plus size={14} />
                           <span>DAFTARKAN PENGGUNA</span>
@@ -3143,19 +3525,27 @@ export default function App() {
                     </div>
 
                     {/* Users view lists right side */}
-                    <div className="md:col-span-2 border border-white/10 rounded-2xl p-5 bg-slate-950/40 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Akun Petugas e-Kelulusan Aktif ({adminUsersList.length})</h3>
+                    <div className={`md:col-span-2 border rounded-2xl p-5 space-y-4 ${
+                      isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Akun Petugas e-Kelulusan Aktif ({adminUsersList.length})</h3>
                       
                       <div className="space-y-3">
                         {adminUsersList.map(u => (
-                          <div key={u.id} className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between group">
+                          <div key={u.id} className={`p-4 border rounded-xl flex items-center justify-between group ${
+                            isDarkActive ? "bg-white/5 border-white/5" : "bg-slate-50/50 border-slate-100"
+                          }`}>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs capitalize text-cyan-400 border border-white/10">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs capitalize border ${
+                                isDarkActive ? "bg-white/5 text-cyan-400 border-white/10" : "bg-white text-blue-600 border-slate-250 shadow-sm"
+                              }`}>
                                 {u.username.charAt(0)}
                               </div>
                               <div>
-                                <h4 className="text-white font-bold text-xs">{u.name}</h4>
-                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">Username: {u.username} | Role: <span className="text-cyan-400">{u.role}</span></p>
+                                <h4 className={`font-bold text-xs ${isDarkActive ? "text-white" : "text-slate-800"}`}>{u.name}</h4>
+                                <p className={`text-[10px] font-mono mt-0.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                                  Username: {u.username} | Role: <span className={isDarkActive ? "text-cyan-400" : "text-blue-600 font-semibold"}>{u.role}</span>
+                                </p>
                               </div>
                             </div>
 
@@ -3177,34 +3567,40 @@ export default function App() {
               {/* 7. SETTING APLIKASI TAB */}
               {activeAdminTab === "settings" && adminUser.role === UserRole.SUPER_ADMIN && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Pengaturan Portal Sekolah & Database</h2>
-                    <p className="text-xs text-slate-400 mt-1">Konfigurasikan target tanggal countdown kesiswaan, Kop ijazah, backup dan restore.</p>
+                  <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                    <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Pengaturan Portal Sekolah & Database</h2>
+                    <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Konfigurasikan target tanggal countdown kesiswaan, Kop ijazah, backup dan restore.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* UI configuration left space */}
-                    <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-white">Metadata Header KOP & Countdown</h3>
+                    <div className={`p-5 rounded-2xl border space-y-4 ${
+                      isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-202 shadow-sm"
+                    }`}>
+                      <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Metadata Header KOP & Countdown</h3>
                       
                       <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Nama Instansi Sekolah *</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Nama Instansi Sekolah *</label>
                             <input
                               type="text"
                               required
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                              }`}
                               value={formSchoolName}
                               onChange={e => setFormSchoolName(e.target.value)}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Tautan URL Logo Sekolah</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Tautan URL Logo Sekolah</label>
                             <input
                               type="text"
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50 font-mono"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition font-mono ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                              }`}
                               value={formSchoolLogo}
                               onChange={e => setFormSchoolLogo(e.target.value)}
                             />
@@ -3212,32 +3608,52 @@ export default function App() {
                         </div>
 
                         <div>
-                          <label className="block text-slate-400 mb-1.5">Alamat Surat Sekolah</label>
+                          <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Alamat Surat Sekolah</label>
                           <input
                             type="text"
                             required
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
                             value={formAddress}
                             onChange={e => setFormAddress(e.target.value)}
                           />
                         </div>
 
+                        <div>
+                          <label className={`block mb-1.5 font-semibold ${isDarkActive ? "text-cyan-400" : "text-blue-600"}`}>Tautan URL Gambar Background (Landing Page)</label>
+                          <input
+                            type="text"
+                            placeholder="Contoh: https://images.unsplash.com/... atau tautan gambar Anda"
+                            className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition font-mono ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                            }`}
+                            value={formBackgroundImage}
+                            onChange={e => setFormBackgroundImage(e.target.value)}
+                          />
+                          <p className={`text-[10px] mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Gunakan URL gambar (misal Unsplash, Imgur, server Anda) untuk mengganti latar belakang halaman utama.</p>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Email Hubungan</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Email Hubungan</label>
                             <input
                               type="email"
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                              }`}
                               value={formEmail}
                               onChange={e => setFormEmail(e.target.value)}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-slate-400 mb-1.5">No Telepon Sekolah</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>No Telepon Sekolah</label>
                             <input
                               type="text"
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                              }`}
                               value={formPhone}
                               onChange={e => setFormPhone(e.target.value)}
                             />
@@ -3246,20 +3662,24 @@ export default function App() {
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Nama Kepala Sekolah</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Nama Kepala Sekolah</label>
                             <input
                               type="text"
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              className={`w-full border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50 transition ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-800"
+                              }`}
                               value={formPrincipalName}
                               onChange={e => setFormPrincipalName(e.target.value)}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Nomor NIP Kepala Sekolah</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Nomor NIP Kepala Sekolah</label>
                             <input
                               type="text"
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50 font-mono"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition font-mono ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-202 text-slate-800"
+                              }`}
                               value={formPrincipalNip}
                               onChange={e => setFormPrincipalNip(e.target.value)}
                             />
@@ -3268,22 +3688,26 @@ export default function App() {
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Tanggal Countdown Pengumuman</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Tanggal Countdown Pengumuman</label>
                             <input
                               type="date"
                               required
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition font-sans ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-805"
+                              }`}
                               value={formGradDate}
                               onChange={e => setFormGradDate(e.target.value)}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-slate-400 mb-1.5">Jam Pengumuman (HH:MM)</label>
+                            <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Jam Pengumuman (HH:MM)</label>
                             <input
                               type="time"
                               required
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none"
+                              className={`w-full border rounded-xl px-3 py-2 focus:outline-none transition font-sans ${
+                                isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-805"
+                              }`}
                               value={formGradTime}
                               onChange={e => setFormGradTime(e.target.value)}
                             />
@@ -3291,9 +3715,11 @@ export default function App() {
                         </div>
 
                         <div>
-                          <label className="block text-slate-400 mb-1.5">Teks Pernyataan Kelulusan SKL</label>
+                          <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Teks Pernyataan Kelulusan SKL</label>
                           <textarea
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-white focus:outline-none h-20"
+                            className={`w-full border rounded-xl p-3 text-xs focus:outline-none transition h-20 ${
+                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-805"
+                            }`}
                             value={formTemplateText}
                             onChange={e => setFormTemplateText(e.target.value)}
                           />
@@ -3301,7 +3727,11 @@ export default function App() {
 
                         <button
                           type="submit"
-                          className="w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold rounded-xl text-xs hover:opacity-95 transition cursor-pointer"
+                          className={`w-full py-2 font-bold rounded-xl text-xs transition cursor-pointer ${
+                            isDarkActive 
+                              ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 hover:opacity-95" 
+                              : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                          }`}
                         >
                           SIMPAN PERUBAHAN CONFIG
                         </button>
@@ -3310,37 +3740,51 @@ export default function App() {
 
                     {/* DB Actions right space (Backup / Restore) */}
                     <div className="space-y-6">
-                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Pencadangan Database backup</h3>
-                        <p className="text-slate-400 text-xs font-light leading-relaxed">
+                      <div className={`p-5 rounded-2xl border space-y-4 ${
+                        isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-202 shadow-sm"
+                      }`}>
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Pencadangan Database backup</h3>
+                        <p className={`text-xs font-light leading-relaxed ${isDarkActive ? "text-slate-400" : "text-slate-550"}`}>
                           Anda dapat mengunduh seluruh salinan data e-kelulusan dalam format file backup JSON. File ini menyimpan data murid, subjek pelajaran, leger nilai, pengumuman, dan setting sekolah secara utuh.
                         </p>
 
                         <button
                           onClick={handleDownloadBackup}
-                          className="flex items-center justify-center gap-2 w-full py-2 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl text-xs border border-white/10 transition cursor-pointer"
+                          className={`flex items-center justify-center gap-2 w-full py-2 font-semibold rounded-xl text-xs border transition cursor-pointer ${
+                            isDarkActive 
+                              ? "bg-white/5 hover:bg-white/10 border-white/10 text-white" 
+                              : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700"
+                          }`}
                         >
                           <Database size={14} className="text-cyan-400" />
                           <span>UNDUH BACKUP DATABASE JSON</span>
                         </button>
                       </div>
 
-                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">Pemulihan / Restore Database</h3>
-                        <p className="text-slate-400 text-xs font-light leading-relaxed">
+                      <div className={`p-5 rounded-2xl border space-y-4 ${
+                        isDarkActive ? "bg-slate-900/40 border-white/10" : "bg-white border-slate-202 shadow-sm"
+                      }`}>
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-rose-450" : "text-rose-600"}`}>Pemulihan / Restore Database</h3>
+                        <p className={`text-xs font-light leading-relaxed ${isDarkActive ? "text-slate-400" : "text-slate-550"}`}>
                           Kembalikan data backup yang sudah diunduh sebelumnya dengan cara menempel isian JSON ke editor teks pemulihan di bawah ini. Tindakan ini bersifat sensitif dan akan menimpa database aktif saat ini.
                         </p>
 
                         <textarea
-                          placeholder="Faste teks backup JSON Anda disini..."
-                          className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white font-mono h-24 focus:outline-none focus:border-rose-500/30"
+                          placeholder="Paste teks backup JSON Anda disini..."
+                          className={`w-full border rounded-xl p-3 text-xs font-mono h-24 focus:outline-none focus:border-rose-500/30 ${
+                            isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-800"
+                          }`}
                           value={restoreJsonText}
                           onChange={e => setRestoreJsonText(e.target.value)}
                         />
 
                         <button
                           onClick={handleRestoreBackupSubmit}
-                          className="w-full py-2 bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white font-bold rounded-xl text-xs transition cursor-pointer"
+                          className={`w-full py-2 border font-bold rounded-xl text-xs transition cursor-pointer ${
+                            isDarkActive 
+                              ? "bg-rose-500/10 hover:bg-rose-500 border-rose-500/20 text-rose-400 hover:text-white" 
+                              : "bg-rose-50 hover:bg-rose-600 border-rose-200 text-rose-600 hover:text-white"
+                          }`}
                         >
                           RESTORE PEMULIHAN DATA
                         </button>
@@ -3405,7 +3849,21 @@ export default function App() {
 
             {/* Admin workspace Platform Footer */}
             <footer className="no-print bg-slate-950 border-t border-white/10 p-4 text-center text-[10px] text-slate-500 font-sans tracking-wide">
-              <span>Sistem Pengumuman Kelulusan Elektronik (E-Kelulusan) v1.0.0. Terdaftar pada {settings?.schoolName}</span>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight text-slate-400">
+                <div className="text-center md:text-left">
+                  <span className="font-bold uppercase tracking-wide mr-2 text-slate-300">
+                    {settings?.schoolName || "SMA Negeri 1 Jakarta"}
+                  </span>
+                  <span className="hidden md:inline text-[10px] text-slate-500">
+                    {settings?.address}
+                  </span>
+                </div>
+                <div className="text-center md:text-right flex flex-wrap justify-center md:justify-end items-center gap-x-2 gap-y-0.5">
+                  <p className="m-0 text-[11px] leading-none text-slate-400">
+                    Powered by <a href="https://educita.id" target="_blank" rel="noopener noreferrer" className="hover:underline text-cyan-500 font-bold cursor-pointer">educita.id</a> -- <span className="font-extrabold bg-gradient-to-r from-blue-400 dark:from-blue-400 via-cyan-400 dark:via-cyan-400 to-teal-400 dark:to-teal-400 bg-clip-text text-transparent">Muhammad Luthfi</span> v2026
+                  </p>
+                </div>
+              </div>
             </footer>
           </main>
         </div>

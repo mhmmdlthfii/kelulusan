@@ -47,7 +47,8 @@ const DEFAULT_SETTINGS: ApplicationSettings = {
   signatureImage: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tandatangan_BJH.png", // tidy signature
   announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMA Negeri 1 Jakarta tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:",
   schoolLogoRight: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_Kementerian_Pendidikan_dan_Kebudayaan.png",
-  sklNumberTemplate: "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}"
+  sklNumberTemplate: "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}",
+  backgroundImage: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80"
 };
 
 const DEFAULT_USERS: User[] = [
