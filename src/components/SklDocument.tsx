@@ -86,7 +86,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
               />
             )}
             <div className="text-center flex-grow">
-              <h4 className="text-[11px] md:text-xs font-semibold tracking-wide uppercase text-slate-700 leading-tight">Pemerintah Provinsi DKI Jakarta</h4>
+              <h4 className="text-[11px] md:text-xs font-semibold tracking-wide uppercase text-slate-700 leading-tight">Dinas Pendidikan Pemuda dan Olahraga Kabupaten Jepara</h4>
               <h2 className="text-base md:text-xl font-bold uppercase text-slate-900 tracking-tight leading-tight">{settings.schoolName}</h2>
               <p className="text-[10px] md:text-xs text-slate-600 mt-1">{settings.address}</p>
               <p className="text-[10px] md:text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
@@ -252,7 +252,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
           {/* Signature Box */}
           <div className="text-right flex flex-col items-end justify-between min-h-[140px]">
             <div className="text-sm text-slate-800">
-              <p>Jakarta, {formatIndoDate(settings.graduationDate)}</p>
+              <p>Jepara, {formatIndoDate(settings.graduationDate)}</p>
               <p className="font-semibold text-slate-700 text-xs">Kepala {settings.schoolName}</p>
             </div>
 
@@ -261,7 +261,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
               {settings.signatureImage && (
                 <img 
                   src={settings.signatureImage} 
-                  alt="Tanda Tangan Kepala Sekolah" 
+                  alt=" Draft Tanda Tangan Kepala Sekolah" 
                   className="h-16 w-auto object-contain max-w-full"
                   referrerPolicy="no-referrer"
                 />

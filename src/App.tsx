@@ -2960,7 +2960,7 @@ export default function App() {
                     
                     <div className="mt-12 text-right text-xs">
                       <p>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
-                      <p className="mt-1 font-semibold">Kepala {settings?.schoolName || "SMA Negeri 1 Jakarta"}</p>
+                      <p className="mt-1 font-semibold">Kepala {settings?.schoolName || "SMP Islam Al Hikmah Mayong"}</p>
                       <div className="h-16" />
                       <p className="font-bold underline">{settings?.principalName}</p>
                       <p className="text-[10px] text-gray-500 font-mono">NIP. {settings?.principalNip}</p>
@@ -3852,7 +3852,7 @@ export default function App() {
               <div className="flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight text-slate-400">
                 <div className="text-center md:text-left">
                   <span className="font-bold uppercase tracking-wide mr-2 text-slate-300">
-                    {settings?.schoolName || "SMA Negeri 1 Jakarta"}
+                    {settings?.schoolName || "SMP Islam Al Hikmah Mayong"}
                   </span>
                   <span className="hidden md:inline text-[10px] text-slate-500">
                     {settings?.address}
