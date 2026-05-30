@@ -60,6 +60,8 @@ import Countdown from "./components/Countdown";
 import SklDocument from "./components/SklDocument";
 import Confetti from "./components/Confetti";
 import StudentDialog from "./components/StudentDialog";
+import GradeDialog from "./components/GradeDialog";
+import { FileText, Printer } from "lucide-react";
 
 export default function App() {
   // Page Routing State
@@ -147,7 +149,7 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Admin Dashboard States
-  const [activeAdminTab, setActiveAdminTab] = useState<"dashboard" | "students" | "subjects" | "grades" | "announcements" | "users" | "settings" | "logs">("dashboard");
+  const [activeAdminTab, setActiveAdminTab] = useState<"dashboard" | "students" | "subjects" | "input-nilai" | "grades" | "skl" | "announcements" | "users" | "settings" | "logs">("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // DB Data in Admin view
@@ -163,10 +165,23 @@ export default function App() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importFeedback, setImportFeedback] = useState("");
 
+  // Grade dialog/modal States
+  const [selectedGradeStudent, setSelectedGradeStudent] = useState<Student | null>(null);
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
+  const [showGradesBulkImport, setShowGradesBulkImport] = useState(false);
+  const [bulkGradesImportText, setBulkGradesImportText] = useState("");
+  const [gradesImportFeedback, setGradesImportFeedback] = useState("");
+
   // Filters
   const [siswaSearchFilter, setSiswaSearchFilter] = useState("");
   const [siswaClassFilter, setSiswaClassFilter] = useState("");
   const [siswaStatusFilter, setSiswaStatusFilter] = useState("");
+
+  const [gradesSearchFilter, setGradesSearchFilter] = useState("");
+  const [gradesClassFilter, setGradesClassFilter] = useState("");
+
+  const [inputNilaiSearchFilter, setInputNilaiSearchFilter] = useState("");
+  const [inputNilaiClassFilter, setInputNilaiClassFilter] = useState("");
 
   // Manage Subjects forms
   const [newSubId, setNewSubId] = useState("");
@@ -189,11 +204,15 @@ export default function App() {
   // App Settings forms
   const [formSchoolName, setFormSchoolName] = useState("");
   const [formSchoolLogo, setFormSchoolLogo] = useState("");
+  const [formSchoolLogoRight, setFormSchoolLogoRight] = useState("");
+  const [formSklNumberTemplate, setFormSklNumberTemplate] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [formPrincipalName, setFormPrincipalName] = useState("");
   const [formPrincipalNip, setFormPrincipalNip] = useState("");
+  const [formAcademicYear, setFormAcademicYear] = useState("");
+  const [formSignatureImage, setFormSignatureImage] = useState("");
   const [formGradDate, setFormGradDate] = useState("");
   const [formGradTime, setFormGradTime] = useState("");
   const [formTemplateText, setFormTemplateText] = useState("");
@@ -267,11 +286,15 @@ export default function App() {
       // Pre-populate settings form
       setFormSchoolName(settingsData.schoolName);
       setFormSchoolLogo(settingsData.schoolLogo);
+      setFormSchoolLogoRight(settingsData.schoolLogoRight || "");
+      setFormSklNumberTemplate(settingsData.sklNumberTemplate || "");
       setFormAddress(settingsData.address);
       setFormEmail(settingsData.email);
       setFormPhone(settingsData.phone);
       setFormPrincipalName(settingsData.principalName);
       setFormPrincipalNip(settingsData.principalNip);
+      setFormAcademicYear(settingsData.academicYear || "2025/2026");
+      setFormSignatureImage(settingsData.signatureImage || "");
       setFormGradDate(settingsData.graduationDate);
       setFormGradTime(settingsData.graduationTime);
       setFormTemplateText(settingsData.announcementTemplate);
@@ -568,6 +591,106 @@ export default function App() {
     }
   };
 
+  // Bulk grades import processor (Dynamic matching of mapels headers)
+  const handleGradesBulkImport = async () => {
+    if (!bulkGradesImportText.trim()) return;
+
+    try {
+      const lines = bulkGradesImportText.split("\n").map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        setGradesImportFeedback("CSV harus memiliki baris header dan minimal satu baris data.");
+        return;
+      }
+
+      // First line contains headers: nisn, MAT, IND, ING...
+      const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+      const nisnIndex = headers.indexOf("NISN");
+
+      if (nisnIndex === -1) {
+        setGradesImportFeedback("Baris header CSV wajib berisi kolom 'nisn'!");
+        return;
+      }
+
+      const updatedStudents: any[] = [];
+      let successCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(",").map(p => p.trim());
+        if (parts.length < 2) continue;
+
+        const nisnVal = parts[nisnIndex];
+        if (!nisnVal) continue;
+
+        // Find existing student in master database
+        const existing = adminStudents.find(s => s.nisn === nisnVal);
+        if (!existing) continue;
+
+        const updatedGrades = { ...(existing.grades || {}) };
+        headers.forEach((header, idx) => {
+          if (idx !== nisnIndex && idx < parts.length) {
+            const val = parseInt(parts[idx], 10);
+            if (!isNaN(val)) {
+              updatedGrades[header] = Math.max(0, Math.min(100, val));
+            }
+          }
+        });
+
+        updatedStudents.push({
+          ...existing,
+          grades: updatedGrades
+        });
+        successCount++;
+      }
+
+      if (updatedStudents.length === 0) {
+        setGradesImportFeedback("Tidak ada NISN siswa cocok ditemukan dalam database saat ini.");
+        return;
+      }
+
+      const res = await fetch("/api/students/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ students: updatedStudents })
+      });
+
+      const reply = await res.json();
+      if (res.ok) {
+        setGradesImportFeedback(`Berhasil mengimpor transkrip nilai ${successCount} siswa.`);
+        fetchAdminDashboardData();
+        setBulkGradesImportText("");
+      } else {
+        setGradesImportFeedback(`Error: ${reply.error}`);
+      }
+    } catch {
+      setGradesImportFeedback("Gagal memproses unggah data CSV nilai.");
+    }
+  };
+
+  const handleSaveStudentGrades = async (student: Student) => {
+    try {
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify(student)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Gagal menyimpan.");
+      }
+
+      await fetchAdminDashboardData();
+    } catch (e: any) {
+      throw new Error(e.message || "Gagal menyimpan data nilai.");
+    }
+  };
+
   // Manage Subjects
   const handleSaveSubject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -746,11 +869,15 @@ export default function App() {
         body: JSON.stringify({
           schoolName: formSchoolName,
           schoolLogo: formSchoolLogo,
+          schoolLogoRight: formSchoolLogoRight,
+          sklNumberTemplate: formSklNumberTemplate,
           address: formAddress,
           email: formEmail,
           phone: formPhone,
           principalName: formPrincipalName,
           principalNip: formPrincipalNip,
+          academicYear: formAcademicYear,
+          signatureImage: formSignatureImage,
           graduationDate: formGradDate,
           graduationTime: formGradTime,
           announcementTemplate: formTemplateText
@@ -878,6 +1005,20 @@ export default function App() {
     const matchClass = !siswaClassFilter || s.className === siswaClassFilter;
     const matchStatus = !siswaStatusFilter || s.status === siswaStatusFilter;
     return matchSearch && matchClass && matchStatus;
+  });
+
+  const filteredGradesList = adminStudents.filter(s => {
+    const sTerm = gradesSearchFilter.toLowerCase();
+    const matchSearch = s.name.toLowerCase().includes(sTerm) || s.nisn.includes(sTerm) || s.nis.includes(sTerm);
+    const matchClass = !gradesClassFilter || s.className === gradesClassFilter;
+    return matchSearch && matchClass;
+  });
+
+  const filteredInputNilaiList = adminStudents.filter(s => {
+    const sTerm = inputNilaiSearchFilter.toLowerCase();
+    const matchSearch = s.name.toLowerCase().includes(sTerm) || s.nisn.includes(sTerm) || s.nis.includes(sTerm);
+    const matchClass = !inputNilaiClassFilter || s.className === inputNilaiClassFilter;
+    return matchSearch && matchClass;
   });
 
   // Get dynamic unique classes list for filter option drops
@@ -1627,7 +1768,9 @@ export default function App() {
                   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
                   { id: "students", label: "Data Siswa", icon: Users },
                   { id: "subjects", label: "Mata Pelajaran", icon: BookOpen },
+                  { id: "input-nilai", label: "Input Nilai", icon: Edit2 },
                   { id: "grades", label: "Leger Nilai (Grades)", icon: TrendingUp },
+                  { id: "skl", label: "Form SKL", icon: FileText },
                   { id: "announcements", label: "Pengumuman", icon: Megaphone },
                   ...(adminUser.role === UserRole.SUPER_ADMIN ? [
                     { id: "users", label: "Manajemen User", icon: UserCheck },
@@ -2104,42 +2247,313 @@ export default function App() {
                 </div>
               )}
 
+              {/* INPUT NILAI TAB */}
+              {activeAdminTab === "input-nilai" && (
+                <div className="space-y-6">
+                  {/* Clean Page Title Header section */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Input & Edit Nilas Kompetensi</h2>
+                      <p className="text-xs text-slate-400 mt-1">Kelola dan input nilai rapor/Ujian Sekolah masing-masing siswa, atau import massal seluruh Mapel via CSV.</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition cursor-pointer"
+                      >
+                        <Upload size={14} />
+                        <span>Import Nilai CSV</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bulk Import panel wrapper inside Input Nilai view */}
+                  {showGradesBulkImport && (
+                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Import Nilai Siswa (CSV)</h3>
+                        <p className="text-slate-400 text-[10px] mt-1 leading-normal">
+                          Masukkan baris CSV dengan baris header mengandung <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
+                        </p>
+                      </div>
+
+                      {gradesImportFeedback && (
+                        <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono rounded-lg">{gradesImportFeedback}</p>
+                      )}
+
+                      <textarea
+                        className="w-full bg-slate-950 border border-white/15 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-mono h-32 focus:outline-none transition"
+                        placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
+                        value={bulkGradesImportText}
+                        onChange={e => setBulkGradesImportText(e.target.value)}
+                      />
+
+                      <div className="flex justify-end gap-3">
+                        <button 
+                          onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
+                          className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-400 hover:text-white"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={handleGradesBulkImport}
+                          className="px-4 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-cyan-600 transition"
+                        >
+                          Proses Impor Nilai
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search and class Filters panel */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 no-print">
+                    <div className="relative font-sans">
+                      <input
+                        type="text"
+                        placeholder="Cari siswa berdasarkan nama, NISN, atau NIS..."
+                        className="w-full bg-slate-950 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition font-sans"
+                        value={inputNilaiSearchFilter}
+                        onChange={e => setInputNilaiSearchFilter(e.target.value)}
+                      />
+                      <Search size={14} className="absolute left-3.5 top-3 text-slate-500" />
+                    </div>
+
+                    <select
+                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      value={inputNilaiClassFilter}
+                      onChange={e => setInputNilaiClassFilter(e.target.value)}
+                    >
+                      <option value="">Semua Kelas Rombel</option>
+                      {classFilterOptions.map(cls => <option key={cls} value={cls}>{cls}</option>)}
+                    </select>
+
+                    <div className="text-right flex items-center justify-end font-mono">
+                      <span className="text-[11px] text-slate-400">Jumlah Siswa: <span className="font-bold text-white">{filteredInputNilaiList.length}</span></span>
+                    </div>
+                  </div>
+
+                  {/* Dedicated Input Nilai Student Cards Table List */}
+                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-white/5 text-slate-400 border-b border-white/10 font-semibold font-sans">
+                            <th className="py-3.5 px-4 font-bold text-white">Identitas Siswa</th>
+                            <th className="py-3.5 px-4">Kelas</th>
+                            <th className="py-3.5 px-4 text-center">Status Kelulusan</th>
+                            <th className="py-3.5 px-4">Daftar Nilai Mapel</th>
+                            <th className="py-3.5 px-4 text-center">Rata-Rata</th>
+                            <th className="py-3.5 px-4 text-right w-36">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 font-sans">
+                          {filteredInputNilaiList.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="py-12 text-center text-slate-500 italic font-light">Tidak ada data siswa ditemukan untuk di-input nilainya.</td>
+                            </tr>
+                          ) : (
+                            filteredInputNilaiList.map(student => {
+                              const totalGrade = subjects.reduce((a, s) => a + (student.grades ? student.grades[s.id] || 0 : 0), 0);
+                              const average = totalGrade / (subjects.length || 1);
+                              const totalSubjects = subjects.length;
+                              const gradedCount = subjects.filter(sub => student.grades && student.grades[sub.id] !== undefined).length;
+                              
+                              return (
+                                <tr key={student.nisn} className="hover:bg-white/5 transition group">
+                                  <td className="py-3 px-4">
+                                    <div className="font-bold text-white capitalize leading-tight">{student.name}</div>
+                                    <div className="text-[10px] text-slate-400 mt-1 font-mono">
+                                      NISN: {student.nisn} | NIS: {student.nis}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-300 font-medium">{student.className}</td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                      student.status === GraduationStatus.LULUS 
+                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                                        : student.status === GraduationStatus.LULUS_BERSYARAT 
+                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" 
+                                        : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                    }`}>
+                                      {student.status.replace("_", " ")}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 max-w-sm">
+                                    <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto pr-1">
+                                      {subjects.map(s => {
+                                        const score = student.grades ? student.grades[s.id] : undefined;
+                                        const isBelowKkm = score !== undefined && score < s.kkm;
+                                        
+                                        return (
+                                          <div 
+                                            key={s.id} 
+                                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                                              score === undefined 
+                                                ? "bg-slate-900 border-white/5 text-slate-500" 
+                                                : isBelowKkm 
+                                                ? "bg-rose-500/10 border-rose-500/20 text-rose-400 font-bold" 
+                                                : "bg-cyan-500/10 border-cyan-500/25 text-cyan-400 font-semibold"
+                                            }`}
+                                            title={`${s.name} (KKM: ${s.kkm})`}
+                                          >
+                                            {s.id}: <span className="font-bold">{score !== undefined ? score : "—"}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="text-[9px] text-slate-400 mt-1 font-medium font-sans">
+                                      Terisi {gradedCount} dari {totalSubjects} Mata Pelajaran
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center font-mono font-bold">
+                                    <span className={average >= 75 ? "text-emerald-400" : "text-amber-400"}>
+                                      {average.toFixed(2)}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button
+                                      onClick={() => { setSelectedGradeStudent(student); setIsGradeModalOpen(true); }}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/40 rounded-xl text-xs font-semibold cursor-pointer transition shadow"
+                                    >
+                                      <Edit2 size={12} />
+                                      <span>Input Nilai</span>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 4. LEGER NILAI & DATA MASTER TAB */}
               {activeAdminTab === "grades" && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white">Leger Nilai & Data Master</h2>
-                    <p className="text-xs text-slate-400 mt-1">Review ledger transkrip kelulusan siswa, rata-rata kompetensi ujian sekolah.</p>
+                  {/* Clean Page Title Header section */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Pratinjau Leger Nilai & Kompetensi</h2>
+                      <p className="text-xs text-slate-400 mt-1">Review ledger transkrip kelulusan siswa, rata-rata kompetensi ujian, cetak leger per kelas, atau import transkrip nilai.</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => window.print()}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:opacity-90 text-xs font-semibold rounded-xl text-slate-950 transition shadow"
+                      >
+                        <Printer size={14} />
+                        <span>Cetak Leger Rombel</span>
+                      </button>
+                      <button
+                        onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs font-semibold rounded-xl text-slate-300 transition"
+                      >
+                        <Upload size={14} />
+                        <span>Import Nilai CSV</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40">
+                  {/* Bulk Import panel wrapper for grades */}
+                  {showGradesBulkImport && (
+                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Import Nilai Siswa Baru (CSV)</h3>
+                        <p className="text-slate-400 text-[10px] mt-1 leading-normal">
+                          Gunakan baris CSV yang memiliki baris header berisi <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
+                        </p>
+                      </div>
+
+                      {gradesImportFeedback && (
+                        <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono rounded-lg">{gradesImportFeedback}</p>
+                      )}
+
+                      <textarea
+                        className="w-full bg-slate-950 border border-white/15 focus:border-cyan-500/50 rounded-xl p-3 text-xs text-white font-mono h-32 focus:outline-none transition"
+                        placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
+                        value={bulkGradesImportText}
+                        onChange={e => setBulkGradesImportText(e.target.value)}
+                      />
+
+                      <div className="flex justify-end gap-3">
+                        <button 
+                          onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
+                          className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-400 hover:text-white"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={handleGradesBulkImport}
+                          className="px-4 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-cyan-600 transition"
+                        >
+                          Proses Impor Nilas
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search and class Filters panel */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 no-print">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Cari siswa, NISN, atau NIS..."
+                        className="w-full bg-slate-950 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition font-sans"
+                        value={gradesSearchFilter}
+                        onChange={e => setGradesSearchFilter(e.target.value)}
+                      />
+                      <Search size={14} className="absolute left-3.5 top-3 text-slate-500" />
+                    </div>
+
+                    <select
+                      className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 transition"
+                      value={gradesClassFilter}
+                      onChange={e => setGradesClassFilter(e.target.value)}
+                    >
+                      <option value="">Semua Kelas Rombel</option>
+                      {classFilterOptions.map(cls => <option key={cls} value={cls}>{cls}</option>)}
+                    </select>
+
+                    <div className="text-right flex items-center justify-end">
+                      <span className="text-[11px] text-slate-400 font-mono">Records: <span className="font-bold text-white">{filteredGradesList.length}</span> cocok</span>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Master ledger screen table layout */}
+                  <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40 no-print">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="bg-white/5 text-slate-400 border-b border-white/10 font-medium">
                             <th className="py-3 px-4">Nama Siswa</th>
-                            <th className="py-3 px-4">Kelas</th>
+                            <th className="py-3 px-4">Kelas Rombel</th>
                             {subjects.map(s => (
                               <th key={s.id} className="py-3 px-3 text-center" title={`${s.name} (KKM:${s.kkm})`}>
                                 {s.id}
                                 <span className="block text-[9px] text-slate-500 font-mono mt-0.5">K:{s.kkm}</span>
                               </th>
                             ))}
-                            <th className="py-3 px-4 text-center">Rata-Rata</th>
+                            <th className="py-3 px-4 text-center bg-cyan-500/5">Rata-Rata</th>
                             <th className="py-3 px-4 text-center">Status</th>
+                            <th className="py-3 px-4 text-right w-16">Aksi</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                          {adminStudents.length === 0 ? (
+                          {filteredGradesList.length === 0 ? (
                             <tr>
-                              <td colSpan={subjects.length + 4} className="py-12 text-center text-slate-500 italic font-light">Belum ada data siswa terdaftar.</td>
+                              <td colSpan={subjects.length + 5} className="py-12 text-center text-slate-500 italic font-light">Tidak ada records leger nilai terdaftar.</td>
                             </tr>
                           ) : (
-                            adminStudents.map(student => {
+                            filteredGradesList.map(student => {
                               const totalGrade = subjects.reduce((a, s) => a + (student.grades ? student.grades[s.id] || 0 : 0), 0);
                               const average = totalGrade / (subjects.length || 1);
                               return (
-                                <tr key={student.nisn} className="hover:bg-white/5 transition">
+                                <tr key={student.nisn} className="hover:bg-white/5 transition group">
                                   <td className="py-3 px-4 font-bold text-white capitalize">{student.name}</td>
                                   <td className="py-3 px-4 text-slate-400 font-medium">{student.className}</td>
                                   {subjects.map(s => {
@@ -2168,6 +2582,15 @@ export default function App() {
                                       {student.status}
                                     </span>
                                   </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button
+                                      onClick={() => { setSelectedGradeStudent(student); setIsGradeModalOpen(true); }}
+                                      className="p-1.5 hover:bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition opacity-80 group-hover:opacity-100"
+                                      title="Input / Edit Nilai Siswa"
+                                    >
+                                      <Award size={14} />
+                                    </button>
+                                  </td>
                                 </tr>
                               );
                             })
@@ -2176,6 +2599,336 @@ export default function App() {
                       </table>
                     </div>
                   </div>
+
+                  {/* Special dedicated prints ledger markup view (Only displays during window.print matches) */}
+                  <div className="hidden print:block print:p-8 bg-white text-black font-serif my-4">
+                    <div className="text-center border-b-2 border-black pb-4 mb-6">
+                      <h1 className="text-xl font-bold uppercase tracking-wide">LEGER NILAI HASIL UJIAN SEKOLAH</h1>
+                      <h2 className="text-lg font-bold uppercase">{settings?.schoolName || "SMA NEGERI 1 JAKARTA"}</h2>
+                      <p className="text-xs mt-1">Tahun Pelajaran: {settings?.academicYear || "2025/2026"} | Rombel: {gradesClassFilter || "Semua Kelas"}</p>
+                    </div>
+
+                    <table className="w-full text-left text-xs border border-black border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100 text-black border-b border-black font-semibold">
+                          <th className="py-2 px-3 border-r border-black">Nama Siswa</th>
+                          <th className="py-2 px-3 border-r border-black">NISN / NIS</th>
+                          <th className="py-2 px-3 border-r border-black">Kelas</th>
+                          {subjects.map(s => (
+                            <th key={s.id} className="py-2 px-1 border-r border-black text-center" title={s.name}>
+                              {s.id}
+                            </th>
+                          ))}
+                          <th className="py-2 px-2 border-r border-black text-center">Rata-Rata</th>
+                          <th className="py-2 px-2 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-black">
+                        {filteredGradesList.map((student) => {
+                          const totalGrade = subjects.reduce((a, s) => a + (student.grades ? student.grades[s.id] || 0 : 0), 0);
+                          const average = totalGrade / (subjects.length || 1);
+                          return (
+                            <tr key={student.nisn} className="border-b border-black">
+                              <td className="py-2 px-3 border-r border-black font-bold uppercase">{student.name}</td>
+                              <td className="py-2 px-3 border-r border-black font-mono">{student.nisn} / {student.nis}</td>
+                              <td className="py-2 px-3 border-r border-black">{student.className}</td>
+                              {subjects.map(s => {
+                                const score = student.grades ? student.grades[s.id] || 0 : 0;
+                                return (
+                                  <td key={s.id} className="py-2 px-1 border-r border-black text-center font-mono">
+                                    {score}
+                                  </td>
+                                );
+                              })}
+                              <td className="py-2 px-2 border-r border-black text-center font-mono font-bold">{average.toFixed(2)}</td>
+                              <td className="py-2 px-2 text-center">{student.status}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    
+                    <div className="mt-12 text-right text-xs">
+                      <p>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                      <p className="mt-1 font-semibold">Kepala {settings?.schoolName || "SMA Negeri 1 Jakarta"}</p>
+                      <div className="h-16" />
+                      <p className="font-bold underline">{settings?.principalName}</p>
+                      <p className="text-[10px] text-gray-500 font-mono">NIP. {settings?.principalNip}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Form SKL - Draft Customize Editor */}
+              {activeAdminTab === "skl" && (
+                <div className="space-y-6">
+                  <div className="border-b border-white/5 pb-4">
+                    <h2 className="text-xl font-bold text-white">Draft & Desain KOP Surat SKL</h2>
+                    <p className="text-xs text-slate-400 mt-1">Sesuaikan konten draf Surat Keterangan Lulus (SKL), logo instansi kemendikbud (kiri) & logo sekolah (kanan), format nomor otomatis, dan unggah e-tanda tangan digital.</p>
+                  </div>
+
+                  <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 text-xs bg-slate-900/10 p-1">
+                    {/* Left Column Config fields */}
+                    <div className="md:col-span-7 space-y-5 p-5 rounded-2xl bg-slate-900/40 border border-white/10">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Parameter KOP Surat & Redaksi</h3>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 mb-1.5">Nama Instansi Sekolah *</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            value={formSchoolName}
+                            onChange={e => setFormSchoolName(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-400 mb-1.5">Tahun Pelajaran *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Contoh: 2025/2026"
+                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            value={formAcademicYear}
+                            onChange={e => setFormAcademicYear(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1.5">Alamat Surat Sekolah</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                          value={formAddress}
+                          onChange={e => setFormAddress(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 mb-1.5 font-mono">Email Surat Resmi</label>
+                          <input
+                            type="email"
+                            required
+                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            value={formEmail}
+                            onChange={e => setFormEmail(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-400 mb-1.5 font-mono">No. Telepon / Fax</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                            value={formPhone}
+                            onChange={e => setFormPhone(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1.5 font-mono">Template Penomoran SKL (Otomatis)</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Nomor: 421.3/ {academicYear} /SMAN1/SKL"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white font-mono focus:outline-none transition"
+                          value={formSklNumberTemplate}
+                          onChange={e => setFormSklNumberTemplate(e.target.value)}
+                        />
+                        <span className="text-[10px] text-slate-500 block mt-1">Gunakan token <span className="font-mono text-cyan-400">{`{academicYear}`}</span> untuk menyisipkan tahun pelajaran saat ini secara otomatis.</span>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1.5 font-sans">Sandi Redaksi Pembuka Dokumen SKL *</label>
+                        <textarea
+                          required
+                          className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl p-3 text-white h-24 focus:outline-none transition"
+                          value={formTemplateText}
+                          onChange={e => setFormTemplateText(e.target.value)}
+                        />
+                        <span className="text-[10px] text-slate-500 block">Kalimat pembuka surat pernyataan kelulusan resmi.</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 mb-1.5 font-sans">Tanggal Kelulusan (Tgl Surat)</label>
+                          <input
+                            type="date"
+                            required
+                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white focus:outline-none transition"
+                            value={formGradDate}
+                            onChange={e => setFormGradDate(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-400 mb-1.5 font-sans">Waktu Countdown Pengumuman</label>
+                          <input
+                            type="time"
+                            required
+                            className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-white focus:outline-none transition"
+                            value={formGradTime}
+                            onChange={e => setFormGradTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column Signature / Logos upload triggers */}
+                    <div className="md:col-span-5 space-y-5 flex flex-col">
+                      {/* Logo Configuration Blocks */}
+                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Konfigurasi Visual Logo KOP</h4>
+                        
+                        {/* Logo Left Spot */}
+                        <div className="space-y-2">
+                          <label className="block text-slate-400">Logo Instansi Kiri (Default: Logo Tut Wuri / Kemendikbud)</label>
+                          <div className="flex items-center gap-3">
+                            <img src={formSchoolLogo || "https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_Tut_Wuri_Handayani.png"} alt="Left Logo" className="w-12 h-12 object-contain bg-slate-950 p-1.5 border border-white/10 rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                            <div className="space-y-1.5 flex-1">
+                              <input
+                                type="text"
+                                placeholder="Tautan Logo URL"
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                value={formSchoolLogo}
+                                onChange={e => setFormSchoolLogo(e.target.value)}
+                              />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="text-[10px] text-slate-400 block"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (rl) => {
+                                      setFormSchoolLogo(rl.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Logo Right Spot */}
+                        <div className="space-y-2">
+                          <label className="block text-slate-400">Logo Sekolah Kanan (Default: Kosong / Dapat diisi logo Sklh)</label>
+                          <div className="flex items-center gap-3">
+                            <img src={formSchoolLogoRight || "https://placehold.co/100x100?text=Logo+Kanan"} alt="Right Logo" className="w-12 h-12 object-contain bg-slate-950 p-1.5 border border-white/10 rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                            <div className="space-y-1.5 flex-1">
+                              <input
+                                type="text"
+                                placeholder="Tautan Logo URL"
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                value={formSchoolLogoRight}
+                                onChange={e => setFormSchoolLogoRight(e.target.value)}
+                              />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="text-[10px] text-slate-400 block"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (rl) => {
+                                      setFormSchoolLogoRight(rl.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Headmaster and e-TTD settings block */}
+                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 space-y-4 flex-1">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Tanda Tangan Kepala Sekolah</h4>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-400 mb-1.5">Nama Lengkap Kepala Sekolah *</label>
+                            <input
+                              type="text"
+                              required
+                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                              value={formPrincipalName}
+                              onChange={e => setFormPrincipalName(e.target.value)}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-400 mb-1.5">NIP Kepala Sekolah *</label>
+                            <input
+                              type="text"
+                              required
+                              className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500/50 font-mono"
+                              value={formPrincipalNip}
+                              onChange={e => setFormPrincipalNip(e.target.value)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* E-Signature upload widget */}
+                        <div className="space-y-2">
+                          <label className="block text-slate-400">Berkas E-Tanda Tangan (PNG Transparan Sangat Direkomendasikan)</label>
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-16 bg-slate-950/80 border border-white/10 rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                              {formSignatureImage ? (
+                                <img src={formSignatureImage} alt="E-Signature" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                              ) : (
+                                <span className="text-[10px] text-slate-500 italic text-center">No E-Ttd</span>
+                              )}
+                            </div>
+                            <div className="space-y-1.5 flex-1">
+                              <input
+                                type="text"
+                                placeholder="URL Tanda Tangan"
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-white focus:outline-none font-mono text-[10px]"
+                                value={formSignatureImage}
+                                onChange={e => setFormSignatureImage(e.target.value)}
+                              />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="text-[10px] text-slate-400 block"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (rl) => {
+                                      setFormSignatureImage(rl.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                          <div className="text-[10px] text-slate-400 italic">
+                            Tanpa stempel overlay di bagian ttd sesuai instruksi.
+                          </div>
+                          <button
+                            type="submit"
+                            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition shadow"
+                          >
+                            SIMPAN DRAF SKL
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
                 </div>
               )}
 
@@ -2665,6 +3418,16 @@ export default function App() {
           subjects={subjects}
           onClose={() => { setIsStudentModalOpen(false); setSelectedStudent(null); }}
           onSave={handleSaveStudent}
+        />
+      )}
+
+      {/* Embedded Grade edit modal inside overlays */}
+      {isGradeModalOpen && (
+        <GradeDialog
+          student={selectedGradeStudent}
+          subjects={subjects}
+          onClose={() => { setIsGradeModalOpen(false); setSelectedGradeStudent(null); }}
+          onSave={handleSaveStudentGrades}
         />
       )}
 

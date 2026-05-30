@@ -45,7 +45,9 @@ const DEFAULT_SETTINGS: ApplicationSettings = {
   principalName: "Drs. H. Mulyadi, M.Pd.",
   principalNip: "196803121994031005",
   signatureImage: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tandatangan_BJH.png", // tidy signature
-  announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMA Negeri 1 Jakarta tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:"
+  announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMA Negeri 1 Jakarta tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:",
+  schoolLogoRight: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_Kementerian_Pendidikan_dan_Kebudayaan.png",
+  sklNumberTemplate: "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}"
 };
 
 const DEFAULT_USERS: User[] = [
@@ -214,7 +216,10 @@ export class DbStore {
   // Settings
   public static getSettings(): ApplicationSettings {
     const db = this.read();
-    return db.settings || DEFAULT_SETTINGS;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...(db.settings || {})
+    };
   }
 
   public static updateSettings(settings: ApplicationSettings): ApplicationSettings {

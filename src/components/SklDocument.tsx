@@ -76,27 +76,41 @@ export default function SklDocument({ student, subjects, settings, verificationC
 
         {/* Header (KOP SURAT) */}
         <div>
-          <div className="flex items-center border-b-4 border-double border-slate-900 pb-4 mb-6 gap-6">
-            <img 
-              src={settings.schoolLogo} 
-              alt="Logo Sekolah" 
-              className="w-20 h-20 md:w-24 md:h-24 object-contain flex-shrink-0"
-              referrerPolicy="no-referrer"
-            />
+          <div className="flex items-center border-b-4 border-double border-slate-900 pb-4 mb-6 gap-4 md:gap-6">
+            {settings.schoolLogo && (
+              <img 
+                src={settings.schoolLogo} 
+                alt="Logo Kiri" 
+                className="w-16 h-16 md:w-20 md:h-20 object-contain flex-shrink-0"
+                referrerPolicy="no-referrer"
+              />
+            )}
             <div className="text-center flex-grow">
-              <h4 className="text-sm font-semibold tracking-wide uppercase text-slate-700">Pemerintah Provinsi DKI Jakarta</h4>
-              <h2 className="text-xl md:text-2xl font-bold uppercase text-slate-900 tracking-tight leading-tight">{settings.schoolName}</h2>
-              <p className="text-xs text-slate-600 mt-1">{settings.address}</p>
-              <p className="text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
+              <h4 className="text-[11px] md:text-xs font-semibold tracking-wide uppercase text-slate-700 leading-tight">Pemerintah Provinsi DKI Jakarta</h4>
+              <h2 className="text-base md:text-xl font-bold uppercase text-slate-900 tracking-tight leading-tight">{settings.schoolName}</h2>
+              <p className="text-[10px] md:text-xs text-slate-600 mt-1">{settings.address}</p>
+              <p className="text-[10px] md:text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
             </div>
+            {settings.schoolLogoRight && (
+              <img 
+                src={settings.schoolLogoRight} 
+                alt="Logo Kanan" 
+                className="w-16 h-16 md:w-20 md:h-20 object-contain flex-shrink-0"
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
-
+ 
           {/* Surat Title */}
           <div className="text-center mb-6">
             <h1 className="text-lg md:text-xl font-bold uppercase tracking-widest decoration-dotted underline underline-offset-4 text-slate-900">
               Surat Keterangan Lulus (SKL)
             </h1>
-            <p className="text-xs text-slate-600 mt-1">Nomor: 421.3 / 108 / SMAN-1 / TA-{settings.academicYear.replace("/", "-")}</p>
+            <p className="text-xs text-slate-600 mt-1">
+              {(settings.sklNumberTemplate || "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}")
+                .replace("{academicYear}", (settings.academicYear || "2025/2026").replace("/", "-"))
+              }
+            </p>
           </div>
 
           {/* Opening Statement */}
@@ -242,7 +256,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
               <p className="font-semibold text-slate-700 text-xs">Kepala {settings.schoolName}</p>
             </div>
 
-            {/* Principal Signature Image & Stamp */}
+            {/* Principal Signature Image (E-TTD) */}
             <div className="relative h-20 w-44 my-1 mr-4 flex items-center justify-end">
               {settings.signatureImage && (
                 <img 
@@ -252,12 +266,6 @@ export default function SklDocument({ student, subjects, settings, verificationC
                   referrerPolicy="no-referrer"
                 />
               )}
-              {/* Styled Stamp overlay representing blue official school stamp */}
-              <div className="absolute right-12 top-0 h-16 w-16 border-2 border-blue-500/30 rounded-full flex items-center justify-center -rotate-12 pointer-events-none select-none">
-                <span className="text-[6px] font-bold text-blue-500/40 text-center uppercase tracking-tighter">
-                  STAMP<br/>OFFICIAL
-                </span>
-              </div>
             </div>
 
             <div className="text-sm text-slate-800">

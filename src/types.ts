@@ -62,6 +62,8 @@ export interface ApplicationSettings {
   principalNip: string;
   signatureImage: string; // base64 or URL
   announcementTemplate: string;
+  schoolLogoRight?: string; // base64 or URL for right kop logo
+  sklNumberTemplate?: string; // customizable layout format for letter reference numbers
 }
 
 export interface LoginLog {

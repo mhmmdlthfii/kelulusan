@@ -248,38 +248,6 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
             </div>
           </div>
 
-          {/* Leger Nilai Per Mapel */}
-          <div className="border-t border-white/10 pt-6">
-            <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-3">Nilai Pokok Kompetensi Mapel (Nilai Ujian)</h4>
-            
-            {subjects.length === 0 ? (
-              <p className="text-slate-500 text-xs text-center py-4 italic">Belum ada mata pelajaran dimasukkan. Harap setup mapel terlebih dahulu.</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {subjects.map(s => {
-                  const val = grades[s.id] !== undefined ? grades[s.id] : "";
-                  return (
-                    <div key={s.id} className="bg-slate-950/50 p-2.5 rounded-xl border border-white/5 space-y-1">
-                      <span className="block text-[11px] text-slate-300 font-medium truncate" title={s.name}>
-                        {s.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-lg px-2 py-1 text-sm text-center font-bold font-mono text-white focus:outline-none transition"
-                          value={val}
-                          onChange={e => handleGradeChange(s.id, e.target.value)}
-                        />
-                        <span className="text-[10px] text-slate-500 font-mono">/K:{s.kkm}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </form>
 
         {/* Footer controls */}
