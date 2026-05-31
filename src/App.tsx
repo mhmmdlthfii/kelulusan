@@ -563,7 +563,7 @@ export default function App() {
         parsedList = JSON.parse(bulkImportText);
       } catch {
         // Fallback simple line-based csv parsing
-        // FORMAT: nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status
+        // FORMAT: nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status,link_foto
         const lines = bulkImportText.split("\n");
         parsedList = lines.map(line => {
           const parts = line.split(",");
@@ -577,6 +577,7 @@ export default function App() {
             birthPlace: parts[5]?.trim() || "Jakarta",
             birthDate: parts[6]?.trim() || "2008-01-01",
             status: (parts[7]?.trim() as GraduationStatus) || GraduationStatus.LULUS,
+            photoUrl: parts[8]?.trim() || "",
             grades: {}
           };
         }).filter(Boolean);
@@ -1050,7 +1051,7 @@ export default function App() {
         student={searchResult.student}
         subjects={subjects}
         settings={settings || {
-          schoolName: "SMA Negeri 1 Jakarta",
+          schoolName: "SMP Islam Al Hikmah Mayong",
           schoolLogo: "",
           schoolFavicon: "",
           address: "",
@@ -1144,7 +1145,7 @@ export default function App() {
 
           {/* Top Header Navigation */}
           <header className={`fixed top-0 inset-x-0 z-50 px-6 py-4 border-b backdrop-blur-md transition-colors duration-300 ${
-            isDarkActive ? "border-white/5 bg-slate-950/70" : "border-slate-200/80 bg-white/70 shadow-sm"
+            isDarkActive ? "border-white/5 bg-slate-950/35" : "border-slate-200/80 bg-white/35 shadow-sm"
           }`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div 
@@ -1781,7 +1782,7 @@ export default function App() {
                     />
                     <span>Ingat login saya</span>
                   </label>
-                  <span className="hover:text-blue-500 dark:hover:text-cyan-400 transition cursor-help font-medium" title="Password default: admin -> admin123, operator -> operator123">Bantuan Akun?</span>
+                  <span className="hover:text-blue-500 dark:hover:text-cyan-400 transition cursor-help font-medium" title="Password default: Luthfi -> lthf23, operator -> operator123">Bantuan Akun?</span>
                 </div>
 
                 <button
@@ -1817,13 +1818,13 @@ export default function App() {
         {/* Elegant Bento Footer - Floating Fixed Bottom */}
         <footer className={`fixed bottom-0 inset-x-0 py-2.5 px-6 border-t text-center z-40 transition-colors duration-300 backdrop-blur-md ${
           isDarkActive 
-            ? "bg-slate-950/75 border-white/5 text-slate-400" 
-            : "bg-white/80 border-slate-200 text-slate-600 shadow-md"
+            ? "bg-slate-950/40 border-white/5 text-slate-400" 
+            : "bg-white/40 border-slate-200 text-slate-600 shadow-sm"
         }`}>
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight">
             <div className="text-center md:text-left">
               <span className={`font-bold uppercase tracking-wide mr-2 ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>
-                {settings?.schoolName || "SMA Negeri 1 Jakarta"}
+                {settings?.schoolName || "SMP Islam Al Hikmah Mayong"}
               </span>
               <span className={`hidden md:inline text-[10px] ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>
                 {settings?.address}
@@ -1936,8 +1937,8 @@ export default function App() {
             isDarkActive ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"
           }`}>
             {/* Platform Topbar */}
-            <header className={`no-print border-b p-4 flex items-center justify-between z-10 sticky top-0 backdrop-blur-md ${
-              isDarkActive ? "bg-slate-950/80 border-white/10 text-white" : "bg-white/90 border-slate-200 text-slate-800 shadow-sm"
+            <header className={`no-print border-b p-4 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md transition-colors duration-300 ${
+              isDarkActive ? "bg-slate-950/45 border-white/10 text-white" : "bg-white/45 border-slate-200 text-slate-800 shadow-sm"
             }`}>
               <div className="flex items-center gap-4">
                 <button 
@@ -2232,7 +2233,7 @@ export default function App() {
                       <div>
                         <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Massal Siswa Baru</h3>
                         <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
-                          Masukkan array data JSON valid berisi struktur siswa OR salinkan baris CSV format: <span className="font-mono text-cyan-400">nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status</span> (Baris baru untuk records berikutnya).
+                          Masukkan array data JSON valid berisi struktur siswa OR salinkan baris CSV format: <span className="font-mono text-cyan-400">nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status,link_foto</span> (Baris baru untuk records berikutnya).
                         </p>
                       </div>
 
@@ -2244,7 +2245,7 @@ export default function App() {
                         className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
                           isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
                         }`}
-                        placeholder='Contoh CSV:&#10;0081234569,220109,Galih Sugiarto,Laki-laki,XII MIPA 3,Bandung,2008-01-20,Lulus&#10;0081234570,220110,Hesti Wulandari,Perempuan,XII MIPA 3,Surabaya,2008-04-14,Lulus'
+                        placeholder='Contoh CSV:&#10;0081234569,220109,Galih Sugiarto,Laki-laki,XII MIPA 3,Bandung,2008-01-20,Lulus,https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d&#10;0081234570,220110,Hesti Wulandari,Perempuan,XII MIPA 3,Surabaya,2008-04-14,Lulus,https://images.unsplash.com/photo-1494790108377-be9c29b29330'
                         value={bulkImportText}
                         onChange={e => setBulkImportText(e.target.value)}
                       />
@@ -3848,19 +3849,23 @@ export default function App() {
             </div>
 
             {/* Admin workspace Platform Footer */}
-            <footer className="no-print bg-slate-950 border-t border-white/10 p-4 text-center text-[10px] text-slate-500 font-sans tracking-wide">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight text-slate-400">
+            <footer className={`no-print border-t p-4 text-center text-[10px] font-sans tracking-wide sticky bottom-0 z-20 backdrop-blur-md transition-colors duration-300 ${
+              isDarkActive 
+                ? "bg-slate-950/45 border-white/10 text-slate-400" 
+                : "bg-white/45 border-slate-200 text-slate-600 shadow-sm"
+            }`}>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-1 text-[11px] leading-tight">
                 <div className="text-center md:text-left">
-                  <span className="font-bold uppercase tracking-wide mr-2 text-slate-300">
+                  <span className={`font-bold uppercase tracking-wide mr-2 ${isDarkActive ? "text-slate-300" : "text-slate-705"}`}>
                     {settings?.schoolName || "SMP Islam Al Hikmah Mayong"}
                   </span>
-                  <span className="hidden md:inline text-[10px] text-slate-500">
+                  <span className={`hidden md:inline text-[10px] ${isDarkActive ? "text-slate-500" : "text-slate-450"}`}>
                     {settings?.address}
                   </span>
                 </div>
-                <div className="text-center md:text-right flex flex-wrap justify-center md:justify-end items-center gap-x-2 gap-y-0.5">
-                  <p className="m-0 text-[11px] leading-none text-slate-400">
-                    Powered by <a href="https://educita.id" target="_blank" rel="noopener noreferrer" className="hover:underline text-cyan-500 font-bold cursor-pointer">educita.id</a> -- <span className="font-extrabold bg-gradient-to-r from-blue-400 dark:from-blue-400 via-cyan-400 dark:via-cyan-400 to-teal-400 dark:to-teal-400 bg-clip-text text-transparent">Muhammad Luthfi</span> v2026
+                <div className="text-center md:text-right flex flex-wrap justify-center md:justify-end items-center gap-x-2 gap-y-0.5 font-medium">
+                  <p className={`m-0 text-[11px] leading-none ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>
+                    Powered by <a href="https://educita.id" target="_blank" rel="noopener noreferrer" className="hover:underline text-cyan-555 font-bold cursor-pointer">educita.id</a> -- <span className="font-extrabold bg-gradient-to-r from-blue-400 dark:from-blue-400 via-cyan-400 dark:via-cyan-400 to-teal-400 dark:to-teal-400 bg-clip-text text-transparent">Muhammad Luthfi</span> v2026
                   </p>
                 </div>
               </div>

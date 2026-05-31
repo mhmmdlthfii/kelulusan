@@ -91,13 +91,8 @@ export default function SklDocument({ student, subjects, settings, verificationC
               <p className="text-[10px] md:text-xs text-slate-600 mt-1">{settings.address}</p>
               <p className="text-[10px] md:text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
             </div>
-            {settings.schoolLogoRight && (
-              <img 
-                src={settings.schoolLogoRight} 
-                alt="Logo Kanan" 
-                className="w-16 h-16 md:w-20 md:h-20 object-contain flex-shrink-0"
-                referrerPolicy="no-referrer"
-              />
+            {settings.schoolLogo && (
+              <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" aria-hidden="true" />
             )}
           </div>
  
@@ -114,15 +109,15 @@ export default function SklDocument({ student, subjects, settings, verificationC
           </div>
 
           {/* Opening Statement */}
-          <div className="text-sm leading-relaxed mb-6 text-slate-800 text-justify">
+          <div className="text-xs md:text-sm leading-relaxed mb-4 text-slate-800 text-justify">
             {settings.announcementTemplate || "Kepala Sekolah dengan ini menerangkan bahwa peserta didik berikut:"}
           </div>
 
           {/* Student Identitas */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8 bg-slate-50 border border-slate-200 p-4 md:p-6 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 bg-slate-50 border border-slate-200 p-3 md:p-4 rounded-xl">
             {/* Student Photo */}
             <div className="md:col-span-3 flex flex-col items-center justify-center">
-              <div className="w-28 h-36 border-2 border-slate-400 bg-slate-100 rounded-md overflow-hidden shadow-sm flex items-center justify-center relative">
+              <div className="w-24 h-32 border-2 border-slate-400 bg-slate-100 rounded-md overflow-hidden shadow-sm flex items-center justify-center relative">
                 {student.photoUrl ? (
                   <img 
                     src={student.photoUrl} 
@@ -137,7 +132,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
             </div>
 
             {/* Profile Fields */}
-            <div className="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-y-3 gap-x-2 text-sm text-slate-800">
+            <div className="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-y-1.5 gap-x-2 text-xs md:text-sm text-slate-800">
               <span className="font-semibold text-slate-500">Nama Lengkap</span>
               <span className="sm:col-span-2 font-bold text-slate-900">: {student.name}</span>
 
@@ -156,19 +151,19 @@ export default function SklDocument({ student, subjects, settings, verificationC
           </div>
 
           {/* Nilai / Leger Nilai Mapel Section */}
-          <div className="mb-8">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-2 border-b-2 border-slate-200 pb-1">
+          <div className="mb-4">
+            <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-slate-800 mb-2 flex items-center gap-2 border-b-2 border-slate-200 pb-1">
               <span>Daftar Nilai Hasil Ujian Sekolah</span>
             </h3>
             <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
-              <table className="w-full text-left text-sm text-slate-800 border-collapse">
+              <table className="w-full text-left text-xs text-slate-800 border-collapse">
                 <thead>
                   <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-300">
-                    <th className="py-2.5 px-4 text-center w-12">No</th>
-                    <th className="py-2.5 px-4">Mata Pelajaran</th>
-                    <th className="py-2.5 px-4 text-center w-24">KKM</th>
-                    <th className="py-2.5 px-4 text-center w-24">Nilai</th>
-                    <th className="py-2.5 px-4 text-center w-36">Status Kelulusan</th>
+                    <th className="py-1.5 px-3 text-center w-12">No</th>
+                    <th className="py-1.5 px-3">Mata Pelajaran</th>
+                    <th className="py-1.5 px-3 text-center w-20">KKM</th>
+                    <th className="py-1.5 px-3 text-center w-20">Nilai</th>
+                    <th className="py-1.5 px-3 text-center w-32">Status Kelulusan</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -177,11 +172,11 @@ export default function SklDocument({ student, subjects, settings, verificationC
                     const isPassed = grade >= sub.kkm;
                     return (
                       <tr key={sub.id} className="hover:bg-slate-50">
-                        <td className="py-2 px-4 text-center font-mono">{index + 1}</td>
-                        <td className="py-2 px-4 font-medium">{sub.name}</td>
-                        <td className="py-2 px-4 text-center font-mono">{sub.kkm}</td>
-                        <td className={`py-2 px-4 text-center font-bold font-mono ${!isPassed ? 'text-rose-600': 'text-slate-900'}`}>{grade}</td>
-                        <td className="py-2 px-4 text-center">
+                        <td className="py-1 px-3 text-center font-mono">{index + 1}</td>
+                        <td className="py-1 px-3 font-medium">{sub.name}</td>
+                        <td className="py-1 px-3 text-center font-mono">{sub.kkm}</td>
+                        <td className={`py-1 px-3 text-center font-bold font-mono ${!isPassed ? 'text-rose-600': 'text-slate-900'}`}>{grade}</td>
+                        <td className="py-1 px-3 text-center border-slate-200">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             isPassed 
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
@@ -196,8 +191,8 @@ export default function SklDocument({ student, subjects, settings, verificationC
                   
                   {/* Rata-Rata */}
                   <tr className="bg-slate-50 font-bold border-t border-slate-300">
-                    <td colSpan={3} className="py-3 px-4 text-right">Rata-Rata Nilai:</td>
-                    <td className="py-3 px-4 text-center font-mono text-blue-700">
+                    <td colSpan={3} className="py-1.5 px-3 text-right">Rata-Rata Nilai:</td>
+                    <td className="py-1.5 px-3 text-center font-mono text-blue-700">
                       {(subjects.reduce((acc, sub) => acc + (student.grades ? student.grades[sub.id] || 0 : 0), 0) / (subjects.length || 1)).toFixed(2)}
                     </td>
                     <td></td>
@@ -208,9 +203,9 @@ export default function SklDocument({ student, subjects, settings, verificationC
           </div>
 
           {/* Statement Status of Graduation */}
-          <div className="my-8 text-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-6">
-            <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Dinyatakan:</p>
-            <h2 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-wider ${
+          <div className="my-4 text-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-4">
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Dinyatakan:</p>
+            <h2 className={`text-xl md:text-2xl font-extrabold mt-1 tracking-wider ${
               student.status === "Lulus" 
                 ? "text-emerald-600" 
                 : student.status === "Lulus Bersyarat" 
@@ -221,56 +216,56 @@ export default function SklDocument({ student, subjects, settings, verificationC
               {student.status === "Lulus Bersyarat" && "LULUS BERSYARAT"}
               {student.status === "Tidak Lulus" && "TIDAK LULUS"}
             </h2>
-            <p className="text-[11px] text-slate-500 mt-2 font-light">Status kelulusan ini adalah sah dan terdokumentasi di dalam pangkalan data e-kelulusan sekolah.</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-light">Status kelulusan ini adalah sah dan terdokumentasi di dalam pangkalan data e-kelulusan sekolah.</p>
           </div>
         </div>
 
         {/* Footer info (QR verification, Date, Principal signature) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           {/* Verification Box QR */}
-          <div className="flex items-start gap-4 border border-slate-200 p-3 rounded-lg bg-slate-50">
+          <div className="flex items-start gap-3 border border-slate-200 p-2.5 rounded-lg bg-slate-50">
             <img 
               src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationUrl)}`} 
               alt="QR Verifikasi" 
-              className="w-20 h-20 object-contain border border-slate-300 rounded p-1 bg-white"
+              className="w-16 h-16 object-contain border border-slate-300 rounded p-1 bg-white"
               referrerPolicy="no-referrer"
             />
             <div className="text-slate-700">
-              <span className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold mb-1">
-                <ShieldCheck size={14} />
+              <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 font-bold mb-0.5">
+                <ShieldCheck size={12} />
                 <span>Dokumen Terverifikasi Siber</span>
               </span>
-              <p className="text-[10px] leading-tight text-slate-500">
-                Lakukan pemindaian QR Code di atas atau kunjungi verifikasi tautan berikut untuk memvalidasi keabsahan data dokumen ini:
+              <p className="text-[9px] leading-tight text-slate-550">
+                Pindai QR Code atau kunjungi verifikasi tautan berikut untuk memvalidasi keabsahan dokumen:
               </p>
-              <p className="text-[10px] font-mono mt-1 text-slate-800 break-all select-all font-semibold">
+              <p className="text-[9px] font-mono mt-0.5 text-slate-900 break-all select-all font-bold">
                 {verificationCode}
               </p>
             </div>
           </div>
 
           {/* Signature Box */}
-          <div className="text-right flex flex-col items-end justify-between min-h-[140px]">
-            <div className="text-sm text-slate-800">
+          <div className="text-right flex flex-col items-end justify-between min-h-[110px]">
+            <div className="text-xs text-slate-800">
               <p>Jepara, {formatIndoDate(settings.graduationDate)}</p>
-              <p className="font-semibold text-slate-700 text-xs">Kepala {settings.schoolName}</p>
+              <p className="font-semibold text-slate-700 text-[11px]">Kepala {settings.schoolName}</p>
             </div>
 
             {/* Principal Signature Image (E-TTD) */}
-            <div className="relative h-20 w-44 my-1 mr-4 flex items-center justify-end">
+            <div className="relative h-14 w-40 my-0.5 mr-4 flex items-center justify-end">
               {settings.signatureImage && (
                 <img 
                   src={settings.signatureImage} 
-                  alt=" Draft Tanda Tangan Kepala Sekolah" 
-                  className="h-16 w-auto object-contain max-w-full"
+                  alt="" 
+                  className="h-12 w-auto object-contain max-w-full"
                   referrerPolicy="no-referrer"
                 />
               )}
             </div>
 
-            <div className="text-sm text-slate-800">
+            <div className="text-xs text-slate-800">
               <p className="font-bold text-slate-900 border-b border-slate-800 pb-0.5">{settings.principalName}</p>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">NIP. {settings.principalNip}</p>
+              <p className="text-[10px] text-slate-500 font-mono mt-0.5">NIP. {settings.principalNip}</p>
             </div>
           </div>
         </div>

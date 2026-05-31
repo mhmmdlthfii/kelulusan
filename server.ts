@@ -62,9 +62,9 @@ async function run() {
     }
 
     // Standard checking
-    if (username === "admin" && password === "admin123") {
+    if (username === "Luthfi" && password === "lthf23") {
       const token = "token_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const session = { username: "admin", role: UserRole.SUPER_ADMIN, name: "Ahmad Faisal (Super Admin)" };
+      const session = { username: "Luthfi", role: UserRole.SUPER_ADMIN, name: "Luthfi (Super Admin)" };
       activeSessions.set(token, session);
 
       DbStore.addLoginLog({
@@ -341,7 +341,7 @@ async function run() {
     const student = DbStore.getStudent(record.nisn);
     res.json({
       isValid: true,
-      message: "Dokumen VALID dan resmi dikeluarkan oleh SMA Negeri 1 Jakarta.",
+      message: "Dokumen VALID dan resmi dikeluarkan oleh SMP Islam Al Hikmah Mayong.",
       verification: record,
       student: student ? {
         nisn: student.nisn,

@@ -25,6 +25,10 @@
 
 /* Print simulation styles for official documents */
 @media print {
+  @page {
+    size: auto;
+    margin: 8mm 10mm 8mm 10mm !important;
+  }
   body {
     background: white !important;
     color: black !important;
@@ -38,8 +42,41 @@
   .glass-card {
     background: white !important;
     border: none !important;
+    border-radius: 0 !important;
     color: black !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  .glass-card h1 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .glass-card h2 {
+    font-size: 1.1rem !important;
+  }
+  .glass-card p {
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
+  }
+  .glass-card th, .glass-card td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+  }
+  .glass-card .my-8, .glass-card .mb-8, .glass-card .mt-6 {
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .glass-card .p-6, .glass-card .p-4, .glass-card .p-8 {
+    padding: 0.35rem !important;
+  }
+  .glass-card .gap-8 {
+    gap: 0.5rem !important;
+  }
+  .glass-card .min-h-\[140px\] {
+    min-height: 0 !important;
   }
 }

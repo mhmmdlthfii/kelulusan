@@ -32,30 +32,30 @@ interface DatabaseSchema {
 }
 
 const DEFAULT_SETTINGS: ApplicationSettings = {
-  schoolName: "SMA Negeri 1 Jakarta",
+  schoolName: "SMP Islam Al Hikmah Mayong",
   schoolLogo: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=128&h=128&fit=crop&q=80", // beautiful school crest Unsplash
   schoolFavicon: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=32&h=32&fit=crop&q=80",
-  address: "Jl. Budi Utomo No. 7, Sawah Besar, Jakarta Pusat, DKI Jakarta",
-  email: "info@sman1jakarta.sch.id",
-  phone: "(021) 3865001",
-  footerText: "Copyright © 2026 SMA Negeri 1 Jakarta. All Rights Reserved.",
+  address: "Jl. Raya Jepara-Kudus No. 12, Mayong, Kabupaten Jepara, Jawa Tengah",
+  email: "info@smpislamalhikmahmayong.sch.id",
+  phone: "(0291) 751234",
+  footerText: "Copyright © 2026 SMP Islam Al Hikmah Mayong. All Rights Reserved.",
   graduationDate: "2026-06-05", // Default countdown target set slightly in future (it is now May 30, 2026)
   graduationTime: "10:00",
   academicYear: "2025/2026",
   principalName: "Drs. H. Mulyadi, M.Pd.",
   principalNip: "196803121994031005",
   signatureImage: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tandatangan_BJH.png", // tidy signature
-  announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMA Negeri 1 Jakarta tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:",
+  announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMP Islam Al Hikmah Mayong tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:",
   schoolLogoRight: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_Kementerian_Pendidikan_dan_Kebudayaan.png",
-  sklNumberTemplate: "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}",
+  sklNumberTemplate: "Nomor: 421.3 / 108 / SMP-AHM / TA-{academicYear}",
   backgroundImage: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80"
 };
 
 const DEFAULT_USERS: User[] = [
   {
     id: "1",
-    username: "admin",
-    name: "Ahmad Faisal (Super Admin)",
+    username: "Luthfi",
+    name: "Luthfi (Super Admin)",
     role: UserRole.SUPER_ADMIN,
     createdAt: new Date().toISOString()
   },
@@ -165,7 +165,7 @@ const DEFAULT_VERIFICATIONS: VerificationCode[] = [
     code: "VER-0081234561-ABC",
     nisn: "0081234561",
     studentName: "Arief Budiman",
-    schoolName: "SMA Negeri 1 Jakarta",
+    schoolName: "SMP Islam Al Hikmah Mayong",
     isValid: true,
     createdAt: "2026-05-30T09:00:00Z"
   }
@@ -415,7 +415,7 @@ export class DbStore {
       code,
       nisn,
       studentName: student ? student.name : "Unknown",
-      schoolName: db.settings?.schoolName || "SMA Negeri 1 Jakarta",
+      schoolName: db.settings?.schoolName || "SMP Islam Al Hikmah Mayong",
       isValid: true,
       createdAt: new Date().toISOString()
     };
