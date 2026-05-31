@@ -221,6 +221,7 @@ export default function App() {
   const [formSchoolName, setFormSchoolName] = useState("");
   const [formSchoolLogo, setFormSchoolLogo] = useState("");
   const [formSchoolLogoRight, setFormSchoolLogoRight] = useState("");
+  const [formWatermarkImage, setFormWatermarkImage] = useState("");
   const [formSklNumberTemplate, setFormSklNumberTemplate] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [formEmail, setFormEmail] = useState("");
@@ -286,6 +287,25 @@ export default function App() {
     }
   }, [currentPath, adminUser, adminToken]);
 
+  // Dynamic tab favicon & document title synchronization
+  useEffect(() => {
+    if (settings) {
+      if (settings.schoolName) {
+        document.title = `E-Kelulusan | ${settings.schoolName}`;
+      }
+      const iconUrl = settings.schoolLogo || settings.schoolFavicon;
+      if (iconUrl) {
+        let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "icon";
+          document.getElementsByTagName("head")[0].appendChild(link);
+        }
+        link.href = iconUrl;
+      }
+    }
+  }, [settings]);
+
   const fetchPublicData = async () => {
     try {
       const settingsRes = await fetch("/api/settings");
@@ -304,6 +324,7 @@ export default function App() {
       setFormSchoolName(settingsData.schoolName);
       setFormSchoolLogo(settingsData.schoolLogo);
       setFormSchoolLogoRight(settingsData.schoolLogoRight || "");
+      setFormWatermarkImage(settingsData.watermarkImage || "");
       setFormSklNumberTemplate(settingsData.sklNumberTemplate || "");
       setFormAddress(settingsData.address);
       setFormEmail(settingsData.email);
@@ -889,6 +910,7 @@ export default function App() {
           schoolName: formSchoolName,
           schoolLogo: formSchoolLogo,
           schoolLogoRight: formSchoolLogoRight,
+          watermarkImage: formWatermarkImage,
           sklNumberTemplate: formSklNumberTemplate,
           address: formAddress,
           email: formEmail,
@@ -3177,6 +3199,39 @@ export default function App() {
                                     const reader = new FileReader();
                                     reader.onload = (rl) => {
                                       setFormSchoolLogoRight(rl.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Logo Background (Watermark SKL) */}
+                        <div className="space-y-2 border-t pt-3 border-slate-200/50 dark:border-white/5">
+                          <label className={`block ${isDarkActive ? "text-slate-400" : "text-slate-650"}`}>Logo Watermark Latar Belakang SKL (Watermark Tengah)</label>
+                          <div className="flex items-center gap-3">
+                            <img src={formWatermarkImage || "https://placehold.co/100x100?text=Watermark"} alt="Watermark Logo" className={`w-12 h-12 object-contain p-1.5 border rounded-lg shrink-0 ${isDarkActive ? "bg-slate-950 border-white/10" : "bg-white border-slate-200"}`} referrerPolicy="no-referrer" />
+                            <div className="space-y-1.5 flex-1">
+                              <input
+                                type="text"
+                                placeholder="Tautan Watermark URL"
+                                className={`w-full border rounded-xl px-3 py-1.5 focus:outline-none font-mono text-[10px] ${
+                                  isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-805"
+                                }`}
+                                value={formWatermarkImage}
+                                onChange={e => setFormWatermarkImage(e.target.value)}
+                              />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className={`text-[10px] block ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (rl) => {
+                                      setFormWatermarkImage(rl.target?.result as string);
                                     };
                                     reader.readAsDataURL(e.target.files[0]);
                                   }

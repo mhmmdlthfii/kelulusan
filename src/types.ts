@@ -63,6 +63,7 @@ export interface ApplicationSettings {
   signatureImage: string; // base64 or URL
   announcementTemplate: string;
   schoolLogoRight?: string; // base64 or URL for right kop logo
+  watermarkImage?: string; // dedicated watermark image for SKL background
   sklNumberTemplate?: string; // customizable layout format for letter reference numbers
   backgroundImage?: string; // custom background image url
 }

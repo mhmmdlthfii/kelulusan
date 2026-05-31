@@ -67,7 +67,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
         {/* Subtle background watermark logo */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none">
           <img 
-            src={settings.schoolLogo} 
+            src={settings.watermarkImage || settings.schoolLogo} 
             alt="Watermark" 
             className="w-96 h-96 object-contain"
             referrerPolicy="no-referrer"
@@ -86,10 +86,10 @@ export default function SklDocument({ student, subjects, settings, verificationC
               />
             )}
             <div className="text-center flex-grow">
-              <h4 className="text-[11px] md:text-xs font-semibold tracking-wide uppercase text-slate-700 leading-tight">Dinas Pendidikan Pemuda dan Olahraga Kabupaten Jepara</h4>
-              <h2 className="text-base md:text-xl font-bold uppercase text-slate-900 tracking-tight leading-tight">{settings.schoolName}</h2>
-              <p className="text-[10px] md:text-xs text-slate-600 mt-1">{settings.address}</p>
-              <p className="text-[10px] md:text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
+              <h4 className="text-[12px] md:text-[13px] font-semibold tracking-wide uppercase text-slate-700 leading-tight">Dinas Pendidikan Pemuda dan Olahraga Kabupaten Jepara</h4>
+              <h2 className="text-lg md:text-2xl font-bold uppercase text-slate-900 tracking-tight leading-tight">{settings.schoolName}</h2>
+              <p className="text-[11px] md:text-xs text-slate-600 mt-1">{settings.address}</p>
+              <p className="text-[11px] md:text-xs text-slate-600">Telp: {settings.phone} | Email: {settings.email}</p>
             </div>
             {settings.schoolLogo && (
               <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" aria-hidden="true" />
@@ -246,9 +246,9 @@ export default function SklDocument({ student, subjects, settings, verificationC
 
           {/* Signature Box */}
           <div className="text-right flex flex-col items-end justify-between min-h-[110px]">
-            <div className="text-xs text-slate-800">
+            <div className="text-[13px] text-slate-800">
               <p>Jepara, {formatIndoDate(settings.graduationDate)}</p>
-              <p className="font-semibold text-slate-700 text-[11px]">Kepala {settings.schoolName}</p>
+              <p className="font-semibold text-slate-700 text-[12px]">Kepala {settings.schoolName}</p>
             </div>
 
             {/* Principal Signature Image (E-TTD) */}
@@ -263,9 +263,9 @@ export default function SklDocument({ student, subjects, settings, verificationC
               )}
             </div>
 
-            <div className="text-xs text-slate-800">
+            <div className="text-[13px] text-slate-800">
               <p className="font-bold text-slate-900 border-b border-slate-800 pb-0.5">{settings.principalName}</p>
-              <p className="text-[10px] text-slate-500 font-mono mt-0.5">NIP. {settings.principalNip}</p>
+              <p className="text-[11px] text-slate-500 font-mono mt-0.5">NIP. {settings.principalNip}</p>
             </div>
           </div>
         </div>

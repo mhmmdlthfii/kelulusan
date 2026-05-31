@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: ApplicationSettings = {
   signatureImage: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tandatangan_BJH.png", // tidy signature
   announcementTemplate: "Berdasarkan hasil Keputusan Rapat Pleno Dewan Pendidik SMP Islam Al Hikmah Mayong tentang Kelulusan Peserta Dididk Tahun Pelajaran 2025/2026, dengan ini menerangkan bahwa peserta didik yang namanya tertera pada lembar dokumen ini dinyatakan:",
   schoolLogoRight: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_Kementerian_Pendidikan_dan_Kebudayaan.png",
+  watermarkImage: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=128&h=128&fit=crop&q=80",
   sklNumberTemplate: "Nomor: 421.3 / 108 / SMP-AHM / TA-{academicYear}",
   backgroundImage: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80"
 };
