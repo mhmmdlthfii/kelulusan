@@ -49,7 +49,8 @@ const DEFAULT_SETTINGS: ApplicationSettings = {
   schoolLogoRight: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_Kementerian_Pendidikan_dan_Kebudayaan.png",
   watermarkImage: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=128&h=128&fit=crop&q=80",
   sklNumberTemplate: "Nomor: 421.3 / 108 / SMP-AHM / TA-{academicYear}",
-  backgroundImage: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80"
+  backgroundImage: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80",
+  isAnnouncementOpen: false
 };
 
 const DEFAULT_USERS: User[] = [

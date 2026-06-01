@@ -248,6 +248,7 @@ export default function App() {
   const [formGradTime, setFormGradTime] = useState("");
   const [formTemplateText, setFormTemplateText] = useState("");
   const [formBackgroundImage, setFormBackgroundImage] = useState("");
+  const [formIsAnnouncementOpen, setFormIsAnnouncementOpen] = useState(false);
   const [restoreJsonText, setRestoreJsonText] = useState("");
 
   // Initialize and route parse
@@ -351,6 +352,7 @@ export default function App() {
       setFormGradTime(settingsData.graduationTime);
       setFormTemplateText(settingsData.announcementTemplate);
       setFormBackgroundImage(settingsData.backgroundImage || "");
+      setFormIsAnnouncementOpen(settingsData.isAnnouncementOpen ?? false);
     } catch (e) {
       console.error("Gagal mendapatkan konfigurasi dasar publik", e);
     }
@@ -1210,7 +1212,8 @@ export default function App() {
           graduationDate: formGradDate,
           graduationTime: formGradTime,
           announcementTemplate: formTemplateText,
-          backgroundImage: formBackgroundImage
+          backgroundImage: formBackgroundImage,
+          isAnnouncementOpen: formIsAnnouncementOpen
         })
       });
 
@@ -1752,13 +1755,44 @@ export default function App() {
                 <div className="w-full z-10">
                   <AnimatePresence mode="wait">
                     {!searchResult ? (
-                      // Search Form
-                      <motion.div
-                        key="search-form"
-                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                        className={`p-5 md:p-6 rounded-[24px] backdrop-blur-3xl shadow-xl flex flex-col justify-between group transition-all duration-300 border ${
+                      settings && !settings.isAnnouncementOpen ? (
+                        // Locked Access Notification Card
+                        <motion.div
+                          key="locked-access"
+                          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                          className={`p-6 md:p-8 rounded-[24px] backdrop-blur-3xl shadow-xl flex flex-col items-center text-center space-y-4 border ${
+                            isDarkActive 
+                              ? "bg-slate-900/60 border-white/10" 
+                              : "bg-white/95 border-slate-200/80 shadow-md shadow-slate-200/40"
+                          }`}
+                        >
+                          <div className="h-14 w-14 bg-amber-500/10 p-0.5 rounded-2xl flex items-center justify-center border border-amber-500/20 text-amber-500 shadow-lg shadow-amber-500/5">
+                            <Lock size={28} className="animate-pulse" />
+                          </div>
+                          
+                          <div className="space-y-2 text-center flex flex-col items-center justify-center">
+                            <h3 className={`text-sm font-extrabold tracking-wider uppercase ${
+                              isDarkActive ? "text-white" : "text-slate-900"
+                            }`}>
+                              AKSES PENGUMUMAN BELUM DIBUKA
+                            </h3>
+                            <p className={`text-xs font-light leading-relaxed max-w-sm ${
+                              isDarkActive ? "text-slate-400" : "text-slate-600"
+                            }`}>
+                              Maaf, akses pencarian dan pelayanan Surat Keterangan Lulus (SKL) siswa saat ini dinonaktifkan atau ditutup sementara oleh pihak sekolah. Silakan kembali lagi nanti atau pantau pengumuman resmi pimpinan.
+                            </p>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        // Search Form
+                        <motion.div
+                          key="search-form"
+                          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                          className={`p-5 md:p-6 rounded-[24px] backdrop-blur-3xl shadow-xl flex flex-col justify-between group transition-all duration-300 border ${
                           isDarkActive 
                             ? "bg-slate-900/60 border-white/10 hover:border-white/15" 
                             : "bg-white/95 border-slate-200/80 shadow-md shadow-slate-200/40 hover:border-slate-300"
@@ -1872,7 +1906,7 @@ export default function App() {
                           </form>
                         </div>
                       </motion.div>
-                    ) : (
+                    )) : (
                       // Search Result box
                       <motion.div
                         key="search-result"
@@ -4798,14 +4832,34 @@ export default function App() {
                         </div>
 
                         <div>
-                          <label className={`block mb-1.5 ${isDarkActive ? "text-slate-400" : "text-slate-655"}`}>Teks Pernyataan Kelulusan SKL</label>
-                          <textarea
-                            className={`w-full border rounded-xl p-3 text-xs focus:outline-none transition h-20 ${
-                              isDarkActive ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-202 text-slate-805"
-                            }`}
-                            value={formTemplateText}
-                            onChange={e => setFormTemplateText(e.target.value)}
-                          />
+                          <label className={`block mb-1.5 font-bold uppercase tracking-wider ${isDarkActive ? "text-slate-400" : "text-slate-600"}`}>Akses Pengumuman Siswa</label>
+                          <div className={`p-4 rounded-xl border flex items-center justify-between ${
+                            isDarkActive ? "bg-slate-950/60 border-white/10" : "bg-slate-50 border-slate-200 shadow-inner"
+                          }`}>
+                            <div className="text-left">
+                              <p className={`font-bold text-xs ${isDarkActive ? "text-emerald-400" : "text-emerald-600"}`}>
+                                {formIsAnnouncementOpen ? "PENGUMUMAN DIBUKA" : "PENGUMUMAN DITUTUP"}
+                              </p>
+                              <p className={`text-[10px] mt-0.5 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                                {formIsAnnouncementOpen 
+                                  ? "Siswa aktif dapat menggunakan fitur pencarian dan menilik SKL mereka." 
+                                  : "Fitur pencarian dinonaktifkan (akses dibatasi) untuk semua siswa."}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFormIsAnnouncementOpen(!formIsAnnouncementOpen)}
+                              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
+                                formIsAnnouncementOpen ? "bg-emerald-500" : "bg-slate-400"
+                              }`}
+                            >
+                              <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                  formIsAnnouncementOpen ? "translate-x-5" : "translate-x-0"
+                                }`}
+                              />
+                            </button>
+                          </div>
                         </div>
 
                         <button

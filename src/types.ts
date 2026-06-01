@@ -67,6 +67,7 @@ export interface ApplicationSettings {
   watermarkImage?: string; // dedicated watermark image for SKL background
   sklNumberTemplate?: string; // customizable layout format for letter reference numbers
   backgroundImage?: string; // custom background image url
+  isAnnouncementOpen?: boolean; // toggle to open/close announcement search and access
 }
 
 export interface LoginLog {

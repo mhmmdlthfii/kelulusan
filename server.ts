@@ -148,6 +148,13 @@ async function run() {
       return;
     }
 
+    // Check announcement open/close status
+    const settings = DbStore.getSettings();
+    if (!settings.isAnnouncementOpen) {
+      res.status(403).json({ error: "Maaf, akses pencarian pengumuman saat ini ditutup atau belum dibuka oleh pihak sekolah." });
+      return;
+    }
+
     const student = DbStore.findStudent(nisn, name, birthDate);
     if (!student) {
       res.status(404).json({ error: "Siswa tidak ditemukan. Periksa kembali NISN, Nama Lengkap, dan Tanggal Lahir Anda." });
