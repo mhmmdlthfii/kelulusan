@@ -26,6 +26,7 @@ export interface Student {
   gender: "Laki-laki" | "Perempuan";
   birthPlace: string;
   birthDate: string; // YYYY-MM-DD
+  parentName: string;
   className: string;
   photoUrl: string;
   status: GraduationStatus;

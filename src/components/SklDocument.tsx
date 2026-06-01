@@ -12,9 +12,10 @@ interface SklProps {
   settings: ApplicationSettings;
   verificationCode: string;
   onBack: () => void;
+  hideControls?: boolean;
 }
 
-export default function SklDocument({ student, subjects, settings, verificationCode, onBack }: SklProps) {
+export default function SklDocument({ student, subjects, settings, verificationCode, onBack, hideControls = false }: SklProps) {
   const verificationUrl = `${window.location.origin}/verifikasi/${verificationCode}`;
   
   // Format long Indonesian dates e.g. "5 Juni 2026"
@@ -42,25 +43,27 @@ export default function SklDocument({ student, subjects, settings, verificationC
   return (
     <div className="w-full max-w-4xl mx-auto my-6 p-4">
       {/* Control Buttons (no-print) */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 no-print bg-slate-900/60 p-4 rounded-xl border border-white/10 backdrop-blur-md">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-sm text-slate-300 hover:text-white px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
-        >
-          <ArrowLeft size={16} />
-          <span>Kembali</span>
-        </button>
-
-        <div className="flex items-center gap-3">
+      {!hideControls && (
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 no-print bg-slate-900/60 p-4 rounded-xl border border-white/10 backdrop-blur-md">
           <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 text-sm text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-4 py-2 rounded-lg font-medium shadow-md transition"
+            onClick={onBack}
+            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
           >
-            <Printer size={16} />
-            <span>Cetak / Simpan PDF</span>
+            <ArrowLeft size={16} />
+            <span>Kembali</span>
           </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 text-sm text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-4 py-2 rounded-lg font-medium shadow-md transition"
+            >
+              <Printer size={16} />
+              <span>Cetak / Simpan PDF</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* SKL Sheet Container (Styled professionally for screens & paper print) */}
       <div className="bg-white text-slate-900 p-8 md:p-12 rounded-2xl shadow-2xl relative overflow-hidden border-4 border-slate-200 min-h-[1100px] flex flex-col justify-between glass-card">
@@ -101,10 +104,8 @@ export default function SklDocument({ student, subjects, settings, verificationC
             <h1 className="text-lg md:text-xl font-bold uppercase tracking-widest decoration-dotted underline underline-offset-4 text-slate-900">
               Surat Keterangan Lulus (SKL)
             </h1>
-            <p className="text-xs text-slate-600 mt-1">
-              {(settings.sklNumberTemplate || "Nomor: 421.3 / 108 / SMAN-1 / TA-{academicYear}")
-                .replace("{academicYear}", (settings.academicYear || "2025/2026").replace("/", "-"))
-              }
+            <p className="text-xs font-semibold text-slate-900 font-mono mt-1">
+              Nomor: 069. {student.nis ? student.nis.slice(-3) : "000"} /SMPIA/VI/2026
             </p>
           </div>
 
@@ -139,8 +140,14 @@ export default function SklDocument({ student, subjects, settings, verificationC
               <span className="font-semibold text-slate-500">NISN / NIS</span>
               <span className="sm:col-span-2">: {student.nisn} / {student.nis}</span>
 
-              <span className="font-semibold text-slate-500">Tempat, Tanggal Lahir</span>
-              <span className="sm:col-span-2">: {student.birthPlace}, {formatIndoDate(student.birthDate)}</span>
+              <span className="font-semibold text-slate-500">Tempat Lahir</span>
+              <span className="sm:col-span-2">: {student.birthPlace}</span>
+
+              <span className="font-semibold text-slate-500">Tanggal Lahir</span>
+              <span className="sm:col-span-2">: {formatIndoDate(student.birthDate)}</span>
+
+              <span className="font-semibold text-slate-500">Nama Orang Tua / Wali</span>
+              <span className="sm:col-span-2 font-semibold text-slate-900">: {student.parentName || "-"}</span>
 
               <span className="font-semibold text-slate-500">Kelas</span>
               <span className="sm:col-span-2">: {student.className}</span>

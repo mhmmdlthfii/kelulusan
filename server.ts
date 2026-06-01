@@ -183,6 +183,24 @@ async function run() {
     }
   });
 
+  app.post("/api/students/bulk-verify-codes", checkAuth(), (req, res) => {
+    try {
+      const { nisns } = req.body;
+      if (!Array.isArray(nisns)) {
+        res.status(400).json({ error: "Kolom 'nisns' wajib diisi dengan format array." });
+        return;
+      }
+      const results: Record<string, string> = {};
+      for (const nisn of nisns) {
+        const ver = DbStore.createVerification(nisn);
+        results[nisn] = ver.code;
+      }
+      res.json(results);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || "Gagal memproses kode verifikasi massal." });
+    }
+  });
+
   app.delete("/api/students/:nisn", checkAuth(), (req, res) => {
     try {
       const deleted = DbStore.deleteStudent(req.params.nisn);

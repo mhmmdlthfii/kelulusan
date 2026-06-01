@@ -87,6 +87,7 @@ const DEFAULT_STUDENTS: Student[] = [
     gender: "Laki-laki",
     birthPlace: "Jakarta",
     birthDate: "2008-04-12",
+    parentName: "Joko Budiman",
     className: "XII MIPA 1",
     photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&q=80",
     status: GraduationStatus.LULUS,
@@ -99,6 +100,7 @@ const DEFAULT_STUDENTS: Student[] = [
     gender: "Laki-laki",
     birthPlace: "Surabaya",
     birthDate: "2008-07-21",
+    parentName: "Slamet Santoso",
     className: "XII MIPA 1",
     photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&q=80",
     status: GraduationStatus.LULUS,
@@ -111,6 +113,7 @@ const DEFAULT_STUDENTS: Student[] = [
     gender: "Perempuan",
     birthPlace: "Bandung",
     birthDate: "2008-02-15",
+    parentName: "Bambang Lestari",
     className: "XII MIPA 1",
     photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&q=80",
     status: GraduationStatus.LULUS,
@@ -123,6 +126,7 @@ const DEFAULT_STUDENTS: Student[] = [
     gender: "Perempuan",
     birthPlace: "Semarang",
     birthDate: "2008-09-03",
+    parentName: "Sugeng Kartika",
     className: "XII MIPA 2",
     photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&q=80",
     status: GraduationStatus.LULUS_BERSYARAT,
@@ -135,6 +139,7 @@ const DEFAULT_STUDENTS: Student[] = [
     gender: "Laki-laki",
     birthPlace: "Medan",
     birthDate: "2007-11-20",
+    parentName: "Hendra Prasetyo",
     className: "XII MIPA 2",
     photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&q=80",
     status: GraduationStatus.TIDAK_LULUS,
@@ -234,7 +239,10 @@ export class DbStore {
   // Students
   public static getStudents(): Student[] {
     const db = this.read();
-    return db.students;
+    return db.students.map(s => ({
+      ...s,
+      parentName: s.parentName || ""
+    }));
   }
 
   public static findStudent(nisn: string, name: string, birthDate: string): Student | null {
@@ -245,12 +253,21 @@ export class DbStore {
       s.name.trim().toLowerCase() === cleanName && 
       s.birthDate === birthDate
     );
-    return found || null;
+    if (!found) return null;
+    return {
+      ...found,
+      parentName: found.parentName || ""
+    };
   }
 
   public static getStudent(nisn: string): Student | null {
     const db = this.read();
-    return db.students.find(s => s.nisn === nisn) || null;
+    const found = db.students.find(s => s.nisn === nisn);
+    if (!found) return null;
+    return {
+      ...found,
+      parentName: found.parentName || ""
+    };
   }
 
   public static saveStudent(student: Student): Student {

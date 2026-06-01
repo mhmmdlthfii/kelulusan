@@ -21,6 +21,7 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
   const [gender, setGender] = useState<"Laki-laki" | "Perempuan">("Laki-laki");
   const [birthPlace, setBirthPlace] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [parentName, setParentName] = useState("");
   const [className, setClassName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [status, setStatus] = useState<GraduationStatus>(GraduationStatus.LULUS);
@@ -36,6 +37,7 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
       setGender(student.gender);
       setBirthPlace(student.birthPlace || "");
       setBirthDate(student.birthDate || "");
+      setParentName(student.parentName || "");
       setClassName(student.className);
       setPhotoUrl(student.photoUrl || "");
       setStatus(student.status);
@@ -47,6 +49,7 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
       setGender("Laki-laki");
       setBirthPlace("");
       setBirthDate("");
+      setParentName("");
       setClassName("");
       setPhotoUrl("");
       setStatus(GraduationStatus.LULUS);
@@ -87,6 +90,7 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
         gender,
         birthPlace: birthPlace.trim() || "Jakarta",
         birthDate,
+        parentName: parentName.trim(),
         className: className.trim(),
         photoUrl: photoUrl.trim() || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&q=80",
         status,
@@ -208,6 +212,18 @@ export default function StudentDialog({ student, subjects, onClose, onSave }: St
                   className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none transition"
                   value={birthDate}
                   onChange={e => setBirthDate(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-slate-400 mb-1.5">Nama Orang Tua / Wali *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full bg-slate-950 border border-white/10 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none transition"
+                  value={parentName}
+                  onChange={e => setParentName(e.target.value)}
+                  placeholder="Nama Lengkap Ayah / Ibu / Wali Siswa"
                 />
               </div>
 

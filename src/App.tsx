@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { 
   Student, 
   Subject, 
@@ -53,7 +54,11 @@ import {
   ListFilter,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  FileText,
+  FileSpreadsheet,
+  Printer,
+  ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Countdown from "./components/Countdown";
@@ -61,7 +66,6 @@ import SklDocument from "./components/SklDocument";
 import Confetti from "./components/Confetti";
 import StudentDialog from "./components/StudentDialog";
 import GradeDialog from "./components/GradeDialog";
-import { FileText, Printer } from "lucide-react";
 
 export default function App() {
   // Page Routing State
@@ -165,8 +169,16 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Admin Dashboard States
-  const [activeAdminTab, setActiveAdminTab] = useState<"dashboard" | "students" | "subjects" | "input-nilai" | "grades" | "skl" | "announcements" | "users" | "settings" | "logs">("dashboard");
+  const [activeAdminTab, setActiveAdminTab] = useState<"dashboard" | "students" | "subjects" | "input-nilai" | "grades" | "skl" | "announcements" | "users" | "settings" | "logs" | "cetak-skl">("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // States for bulk SKL printing
+  const [bulkPrintSelected, setBulkPrintSelected] = useState<string[]>([]);
+  const [isBulkPrintPreviewActive, setIsBulkPrintPreviewActive] = useState(false);
+  const [bulkVerificationCodes, setBulkVerificationCodes] = useState<Record<string, string>>({});
+  const [cetakSklClassFilter, setCetakSklClassFilter] = useState("");
+  const [cetakSklNameFilter, setCetakSklNameFilter] = useState("");
+  const [bulkPrintLoading, setBulkPrintLoading] = useState(false);
 
   // DB Data in Admin view
   const [adminStudents, setAdminStudents] = useState<Student[]>([]);
@@ -180,6 +192,7 @@ export default function App() {
   const [bulkImportText, setBulkImportText] = useState("");
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importFeedback, setImportFeedback] = useState("");
+  const [importedExcelStudents, setImportedExcelStudents] = useState<Student[]>([]);
 
   // Grade dialog/modal States
   const [selectedGradeStudent, setSelectedGradeStudent] = useState<Student | null>(null);
@@ -187,6 +200,7 @@ export default function App() {
   const [showGradesBulkImport, setShowGradesBulkImport] = useState(false);
   const [bulkGradesImportText, setBulkGradesImportText] = useState("");
   const [gradesImportFeedback, setGradesImportFeedback] = useState("");
+  const [importedExcelGrades, setImportedExcelGrades] = useState<any[]>([]);
 
   // Filters
   const [siswaSearchFilter, setSiswaSearchFilter] = useState("");
@@ -399,6 +413,28 @@ export default function App() {
     }
   };
 
+  const fetchBulkVerificationCodes = async (nisns: string[]) => {
+    try {
+      const headers = { 
+        "Authorization": `Bearer ${adminToken}`,
+        "Content-Type": "application/json"
+      };
+      const res = await fetch("/api/students/bulk-verify-codes", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ nisns })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBulkVerificationCodes(prev => ({ ...prev, ...data }));
+        return data;
+      }
+    } catch (e) {
+      console.error("Gagal memuat kode verifikasi massal", e);
+    }
+    return {};
+  };
+
   const verifyAdminToken = async (token: string) => {
     try {
       const res = await fetch("/api/auth/verify", {
@@ -573,18 +609,167 @@ export default function App() {
     }
   };
 
-  // Import Siswa logic parser (JSON array format or CSV parser)
+  // Excel & CSV Student Master List Parser
+  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        if (!bstr) {
+          setImportFeedback("Gagal membaca isi berkas.");
+          return;
+        }
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        
+        const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (rawData.length < 2) {
+          setImportFeedback("Berkas Excel kosong atau tidak memiliki baris data.");
+          return;
+        }
+
+        const headers = rawData[0].map((h: any) => h?.toString().trim().toLowerCase() || "");
+        
+        const nisnIdx = headers.findIndex((h: string) => h.includes("nisn"));
+        const nisIdx = headers.findIndex((h: string) => h.includes("nis") && !h.includes("nisn"));
+        const nameIdx = headers.findIndex((h: string) => h.includes("nama") || h.includes("name"));
+        const genderIdx = headers.findIndex((h: string) => h.includes("gender") || h.includes("kelamin") || h.includes("jk") || h.includes("jenis kelamin"));
+        const classIdx = headers.findIndex((h: string) => h.includes("kelas") || h.includes("class") || h.includes("rombel"));
+        const bPlaceIdx = headers.findIndex((h: string) => h.includes("tempat") || h.includes("birthplace") || h.includes("lahir_tempat") || h.includes("tmpt"));
+        const bDateIdx = headers.findIndex((h: string) => h.includes("tanggal") || h.includes("birthdate") || h.includes("lahir_tanggal") || h.includes("tgl"));
+        const parentIdx = headers.findIndex((h: string) => h.includes("orang tua") || h.includes("ortu") || h.includes("parent") || h.includes("bapak") || h.includes("ibu") || h.includes("ayah") || h.includes("wali") || h.includes("nama orang tua"));
+        const statusIdx = headers.findIndex((h: string) => h.includes("status") || h.includes("kelulusan") || h.includes("keterangan"));
+        const photoIdx = headers.findIndex((h: string) => h.includes("photo") || h.includes("foto") || h.includes("link") || h.includes("photo_url"));
+
+        if (nisnIdx === -1 || nameIdx === -1) {
+          setImportFeedback("Berkas Excel harus minimal mengandung kolom 'NISN' dan 'NAMA'. Kolom yang terbaca pada file ini: " + headers.join(", "));
+          return;
+        }
+
+        const parsedList: Student[] = [];
+        for (let i = 1; i < rawData.length; i++) {
+          const row = rawData[i];
+          if (!row || row.length === 0 || !row[nisnIdx]) continue;
+          
+          const nisnVal = row[nisnIdx].toString().trim();
+          const nameVal = row[nameIdx]?.toString().trim() || "";
+          if (!nisnVal || !nameVal) continue;
+
+          let photoUrlVal = "";
+          if (photoIdx !== -1 && row[photoIdx]) {
+            photoUrlVal = row[photoIdx].toString().trim();
+          }
+
+          let birthPlaceVal = "Jepara";
+          if (bPlaceIdx !== -1 && row[bPlaceIdx]) {
+            birthPlaceVal = row[bPlaceIdx].toString().trim();
+          }
+
+          let birthDateVal = "2011-01-01";
+          if (bDateIdx !== -1 && row[bDateIdx]) {
+            const rawDate = row[bDateIdx];
+            if (typeof rawDate === "number") {
+              const dateObj = new Date((rawDate - 25569) * 86400 * 1000);
+              birthDateVal = dateObj.toISOString().split("T")[0];
+            } else {
+              birthDateVal = rawDate.toString().trim();
+            }
+          }
+
+          let parentNameVal = "";
+          if (parentIdx !== -1 && row[parentIdx]) {
+            parentNameVal = row[parentIdx].toString().trim();
+          }
+
+          let genderVal: "Laki-laki" | "Perempuan" = "Laki-laki";
+          if (genderIdx !== -1 && row[genderIdx]) {
+            const rawGen = row[genderIdx].toString().trim().toLowerCase();
+            if (rawGen.startsWith("p") || rawGen.includes("wanita") || rawGen.includes("perempuan")) {
+              genderVal = "Perempuan";
+            }
+          }
+
+          let statusVal = GraduationStatus.LULUS;
+          if (statusIdx !== -1 && row[statusIdx]) {
+            const rawStatus = row[statusIdx].toString().trim().toLowerCase();
+            if (rawStatus.includes("tidak") || rawStatus.includes("gagal") || rawStatus.startsWith("t")) {
+              statusVal = GraduationStatus.TIDAK_LULUS;
+            } else if (rawStatus.includes("syarat") || rawStatus.includes("bersyarat") || rawStatus.startsWith("b")) {
+              statusVal = GraduationStatus.LULUS_BERSYARAT;
+            }
+          }
+
+          parsedList.push({
+            nisn: nisnVal,
+            nis: (nisIdx !== -1 && row[nisIdx]) ? row[nisIdx].toString().trim() : nisnVal.substring(Math.max(0, nisnVal.length - 6)),
+            name: nameVal,
+            gender: genderVal,
+            className: (classIdx !== -1 && row[classIdx]) ? row[classIdx].toString().trim() : "IX A",
+            birthPlace: birthPlaceVal,
+            birthDate: birthDateVal,
+            parentName: parentNameVal,
+            status: statusVal,
+            photoUrl: photoUrlVal,
+            grades: {}
+          });
+        }
+
+        if (parsedList.length === 0) {
+          setImportFeedback("Tidak ada baris siswa valid untuk diimport pada file ini.");
+          return;
+        }
+
+        setImportedExcelStudents(parsedList);
+        setImportFeedback(`Berhasil membaca berkas excel! Terbaca ${parsedList.length} siswa siap diimport.`);
+      } catch (err: any) {
+        console.error(err);
+        setImportFeedback("Gagal memproses file Excel: " + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleImportExcelStudentsSubmit = async () => {
+    if (importedExcelStudents.length === 0) return;
+
+    try {
+      const res = await fetch("/api/students/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ students: importedExcelStudents })
+      });
+
+      const reply = await res.json();
+      if (res.ok) {
+        setImportFeedback(`Berhasil! ${reply.count} siswa telah sukses diimport ke database.`);
+        fetchAdminDashboardData();
+        setImportedExcelStudents([]);
+        setBulkImportText("");
+      } else {
+        setImportFeedback(`Gagal: ${reply.error}`);
+      }
+    } catch {
+      setImportFeedback("Gagal menyinkronkan data transkrip Excel ke server.");
+    }
+  };
+
+  // Fallback Copy-Paste CSV student importer
   const handleBulkImport = async () => {
     if (!bulkImportText.trim()) return;
 
     try {
-      // Expect JSON structure or robustly compile values
       let parsedList: any[] = [];
       try {
         parsedList = JSON.parse(bulkImportText);
       } catch {
-        // Fallback simple line-based csv parsing
-        // FORMAT: nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status,link_foto
+        // FORMAT: nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,nama_ortu,status,link_foto
         const lines = bulkImportText.split("\n");
         parsedList = lines.map(line => {
           const parts = line.split(",");
@@ -597,15 +782,16 @@ export default function App() {
             className: parts[4]?.trim() || "XII Rombe",
             birthPlace: parts[5]?.trim() || "Jakarta",
             birthDate: parts[6]?.trim() || "2008-01-01",
-            status: (parts[7]?.trim() as GraduationStatus) || GraduationStatus.LULUS,
-            photoUrl: parts[8]?.trim() || "",
+            parentName: parts[7]?.trim() || "",
+            status: (parts[8]?.trim() as GraduationStatus) || GraduationStatus.LULUS,
+            photoUrl: parts[9]?.trim() || "",
             grades: {}
           };
         }).filter(Boolean);
       }
 
       if (parsedList.length === 0) {
-        setImportFeedback("Format teks tidak dikenali atau baris kosong.");
+        setImportFeedback("Format teks tidak dikenali atau kolom kurang lengkap.");
         return;
       }
 
@@ -631,7 +817,111 @@ export default function App() {
     }
   };
 
-  // Bulk grades import processor (Dynamic matching of mapels headers)
+  // Excel & CSV Grades transcript parser
+  const handleGradesExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        if (!bstr) {
+          setGradesImportFeedback("Gagal membaca berkas.");
+          return;
+        }
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        
+        const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (rawData.length < 2) {
+          setGradesImportFeedback("Berkas Excel kosong atau tidak berpola transkrip.");
+          return;
+        }
+
+        const headers = rawData[0].map((h: any) => h?.toString().trim().toUpperCase() || "");
+        const nisnIdx = headers.indexOf("NISN");
+
+        if (nisnIdx === -1) {
+          setGradesImportFeedback("Baris pertama (header) wajib berkandungan kolom 'NISN'!");
+          return;
+        }
+
+        const updatedStudents: Student[] = [];
+        let skippedCount = 0;
+
+        for (let i = 1; i < rawData.length; i++) {
+          const row = rawData[i];
+          if (!row || row.length === 0 || !row[nisnIdx]) continue;
+
+          const nisnVal = row[nisnIdx].toString().trim();
+          const existing = adminStudents.find(s => s.nisn === nisnVal);
+
+          if (!existing) {
+            skippedCount++;
+            continue;
+          }
+
+          const studentGrades = { ...(existing.grades || {}) };
+          headers.forEach((header, idx) => {
+            if (idx !== nisnIdx && idx < row.length) {
+              const val = parseFloat(row[idx]);
+              if (!isNaN(val)) {
+                studentGrades[header.trim()] = Math.max(0, Math.min(100, val));
+              }
+            }
+          });
+
+          updatedStudents.push({
+            ...existing,
+            grades: studentGrades
+          });
+        }
+
+        if (updatedStudents.length === 0) {
+          setGradesImportFeedback("Tidak ada data NISN berkas Excel yang cocok dengan database master.");
+          return;
+        }
+
+        setImportedExcelGrades(updatedStudents);
+        setGradesImportFeedback(`Berhasil! Membaca transkrip ${updatedStudents.length} siswa siap diimport` + (skippedCount > 0 ? ` (${skippedCount} NISN tidak cocok dalam database)` : "") + ".");
+      } catch (err: any) {
+        console.error(err);
+        setGradesImportFeedback("Gagal mengurai file Excel nilai: " + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleImportExcelGradesSubmit = async () => {
+    if (importedExcelGrades.length === 0) return;
+
+    try {
+      const res = await fetch("/api/students/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ students: importedExcelGrades })
+      });
+
+      const reply = await res.json();
+      if (res.ok) {
+        setGradesImportFeedback(`Berhasil! Transkrip nilai untuk ${reply.count} siswa sukses diunggah.`);
+        fetchAdminDashboardData();
+        setImportedExcelGrades([]);
+        setBulkGradesImportText("");
+      } else {
+        setGradesImportFeedback(`Error: ${reply.error}`);
+      }
+    } catch {
+      setGradesImportFeedback("Gagal meyimpan transkrip nilai ke server.");
+    }
+  };
+
+  // Fallback Copy-Paste CSV transkrip importer
   const handleGradesBulkImport = async () => {
     if (!bulkGradesImportText.trim()) return;
 
@@ -642,7 +932,6 @@ export default function App() {
         return;
       }
 
-      // First line contains headers: nisn, MAT, IND, ING...
       const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
       const nisnIndex = headers.indexOf("NISN");
 
@@ -661,7 +950,6 @@ export default function App() {
         const nisnVal = parts[nisnIndex];
         if (!nisnVal) continue;
 
-        // Find existing student in master database
         const existing = adminStudents.find(s => s.nisn === nisnVal);
         if (!existing) continue;
 
@@ -996,6 +1284,111 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Excel Export and Download Templates for Students & Grades
+  const handleExportStudentsExcel = () => {
+    try {
+      const data = adminStudents.map(s => ({
+        "NISN": s.nisn,
+        "NIS": s.nis || "",
+        "NAMA": s.name,
+        "JENIS KELAMIN": s.gender,
+        "KELAS": s.className,
+        "TEMPAT LAHIR": s.birthPlace || "",
+        "TANGGAL LAHIR": s.birthDate || "",
+        "NAMA ORANG TUA": s.parentName || "",
+        "STATUS KELULUSAN": s.status,
+        "FOTO": s.photoUrl || ""
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Siswa");
+      XLSX.writeFile(workbook, `data-master-siswa-${Date.now()}.xlsx`);
+    } catch (err: any) {
+      alert("Gagal melakukan export Excel: " + err.message);
+    }
+  };
+
+  const handleDownloadStudentsExcelTemplate = () => {
+    try {
+      const templateData = [
+        {
+          "NISN": "0081234561",
+          "NIS": "220101",
+          "NAMA": "Ahmad Dani",
+          "JENIS KELAMIN": "Laki-laki",
+          "KELAS": "IX A",
+          "TEMPAT LAHIR": "Jepara",
+          "TANGGAL LAHIR": "2011-04-12",
+          "NAMA ORANG TUA": "Joko Susilo",
+          "STATUS KELULUSAN": "Lulus",
+          "FOTO": ""
+        },
+        {
+          "NISN": "0081234562",
+          "NIS": "220102",
+          "NAMA": "Siti Aminah",
+          "JENIS KELAMIN": "Perempuan",
+          "KELAS": "IX B",
+          "TEMPAT LAHIR": "Semarang",
+          "TANGGAL LAHIR": "2011-09-24",
+          "NAMA ORANG TUA": "Rahmat Hidayat",
+          "STATUS KELULUSAN": "Lulus",
+          "FOTO": ""
+        }
+      ];
+
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
+      XLSX.writeFile(workbook, "template-import-siswa.xlsx");
+    } catch (err: any) {
+      alert("Gagal mengunduh template Excel: " + err.message);
+    }
+  };
+
+  const handleExportGradesExcel = () => {
+    try {
+      const data = adminStudents.map(s => {
+        const studentRow: any = {
+          "NISN": s.nisn,
+          "NAMA": s.name
+        };
+        subjects.forEach(sub => {
+          studentRow[sub.id] = s.grades?.[sub.id] ?? "";
+        });
+        return studentRow;
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Nilai");
+      XLSX.writeFile(workbook, `transkrip-nilai-siswa-${Date.now()}.xlsx`);
+    } catch (err: any) {
+      alert("Gagal melakukan export nilai ke Excel: " + err.message);
+    }
+  };
+
+  const handleDownloadGradesExcelTemplate = () => {
+    try {
+      const sampleGrades: any = {
+        "NISN": "0081234561",
+        "NAMA": "Ahmad Dani (Contoh)"
+      };
+      subjects.forEach(sub => {
+        sampleGrades[sub.id] = 85;
+      });
+
+      const templateData = [sampleGrades];
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template Nilai");
+      XLSX.writeFile(workbook, "template-import-nilai.xlsx");
+    } catch (err: any) {
+      alert("Gagal mengunduh template nilai: " + err.message);
+    }
   };
 
   // Mass updating photo URLs helper
@@ -1896,6 +2289,7 @@ export default function App() {
                   { id: "input-nilai", label: "Input Nilai", icon: Edit2 },
                   { id: "grades", label: "Leger Nilai (Grades)", icon: TrendingUp },
                   { id: "skl", label: "Form SKL", icon: FileText },
+                  { id: "cetak-skl", label: "Cetak SKL", icon: Printer },
                   { id: "announcements", label: "Pengumuman", icon: Megaphone },
                   ...(adminUser.role === UserRole.SUPER_ADMIN ? [
                     { id: "users", label: "Manajemen User", icon: UserCheck },
@@ -2224,9 +2618,26 @@ export default function App() {
                         className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl text-slate-300 transition ${
                           isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
                         }`}
+                        title="Ekspor seluruh data siswa sebagai file CSV"
                       >
                         <Download size={14} />
-                        <span>Export CSV (Excel)</span>
+                        <span>Export CSV</span>
+                      </button>
+                      <button
+                        onClick={handleExportStudentsExcel}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20 transition shadow-sm cursor-pointer"
+                        title="Ekspor seluruh data siswa ke format Microsoft Excel (.xlsx)"
+                      >
+                        <FileSpreadsheet size={14} className="text-emerald-400" />
+                        <span>Export Excel (.xlsx)</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadStudentsExcelTemplate}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border-cyan-500/20 transition shadow-sm cursor-pointer"
+                        title="Unduh file xlsx contoh untuk pengisian data siswa massal"
+                      >
+                        <FileText size={14} className="text-cyan-400" />
+                        <span>Unduh Template Excel</span>
                       </button>
                       <button
                         onClick={() => setShowBulkImport(!showBulkImport)}
@@ -2255,40 +2666,128 @@ export default function App() {
                       <div>
                         <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Massal Siswa Baru</h3>
                         <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
-                          Masukkan array data JSON valid berisi struktur siswa OR salinkan baris CSV format: <span className="font-mono text-cyan-400">nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,status,link_foto</span> (Baris baru untuk records berikutnya).
+                          Anda dapat langsung mengunggah file **Excel (.xlsx, .xls)** atau **CSV** sekolah Anda. Sistem otomatis mengenali judul kolom: <span className="font-semibold text-cyan-400">nisn, nis, nama, jenis kelamin, kelas, tempat lahir, tanggal lahir, nama orang tua, status, foto</span>.
                         </p>
                       </div>
 
                       {importFeedback && (
-                        <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono roundedLg">{importFeedback}</p>
+                        <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono rounded-lg">{importFeedback}</p>
                       )}
 
-                      <textarea
-                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
-                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
-                        }`}
-                        placeholder='Contoh CSV:&#10;0081234569,220109,Galih Sugiarto,Laki-laki,XII MIPA 3,Bandung,2008-01-20,Lulus,https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d&#10;0081234570,220110,Hesti Wulandari,Perempuan,XII MIPA 3,Surabaya,2008-04-14,Lulus,https://images.unsplash.com/photo-1494790108377-be9c29b29330'
-                        value={bulkImportText}
-                        onChange={e => setBulkImportText(e.target.value)}
-                      />
+                      {/* Twin Upload Mode: Excel File Trigger & Fallback Text Area */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* File Upload Box */}
+                        <div className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition ${
+                          isDarkActive ? "border-white/10 bg-slate-950/20 hover:bg-slate-950/40" : "border-slate-300 bg-slate-50 hover:bg-slate-100/50"
+                        }`}>
+                          <Upload size={24} className="text-cyan-500 mb-2" />
+                          <label className="block text-xs font-bold text-slate-300 mb-2 cursor-pointer">
+                            <span className="text-blue-500 hover:underline">Pilih / Unggah Berkas Excel (.xlsx, .xls, .csv)</span>
+                            <input
+                              type="file"
+                              accept=".xlsx, .xls, .csv"
+                              className="hidden"
+                              onChange={handleExcelUpload}
+                            />
+                          </label>
+                          <p className={`text-[9px] ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>Format Excel secara otomatis dipetakan</p>
+                        </div>
+
+                        {/* Fallback Text Box */}
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Atau Tempel Teks CSV/JSON Di Sini (Opsi Cadangan)</label>
+                          <textarea
+                            className={`w-full border rounded-xl p-2.5 text-[10px] font-mono h-24 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                            }`}
+                            placeholder="nisn,nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,nama_ortu,status,link_foto"
+                            value={bulkImportText}
+                            onChange={e => {
+                              setBulkImportText(e.target.value);
+                              setImportedExcelStudents([]); // Reset Excel preview if typing manually
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* PREVIEW OF PARSED EXCEL ROWS */}
+                      {importedExcelStudents.length > 0 && (
+                        <div className="border border-white/10 rounded-xl overflow-hidden bg-slate-950/30">
+                          <div className="p-2 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-emerald-400">Preview Data Terbaca Dari Excel ({importedExcelStudents.length} siswa)</span>
+                            <button
+                              onClick={() => setImportedExcelStudents([])}
+                              className="text-[9px] text-rose-400 hover:underline font-semibold"
+                            >
+                              Bersihkan
+                            </button>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto text-[10px]">
+                            <table className="w-full text-left text-slate-300 divide-y divide-white/5">
+                              <thead className="bg-slate-900 sticky top-0 text-slate-400">
+                                <tr>
+                                  <th className="p-1.5">No</th>
+                                  <th className="p-1.5">NISN / NIS</th>
+                                  <th className="p-1.5">Nama</th>
+                                  <th className="p-1.5">Kelas</th>
+                                  <th className="p-1.5">Tempat, Tgl lahir</th>
+                                  <th className="p-1.5">Nama Orang Tua</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5">
+                                {importedExcelStudents.slice(0, 10).map((std, index) => (
+                                  <tr key={index} className="hover:bg-white/5">
+                                    <td className="p-1.5 font-mono text-[9px]">{index + 1}</td>
+                                    <td className="p-1.5 font-mono">{std.nisn} / {std.nis}</td>
+                                    <td className="p-1.5 font-bold">{std.name}</td>
+                                    <td className="p-1.5">{std.className}</td>
+                                    <td className="p-1.5">{std.birthPlace}, {std.birthDate}</td>
+                                    <td className="p-1.5 text-blue-400">{std.parentName || "-"}</td>
+                                  </tr>
+                                ))}
+                                {importedExcelStudents.length > 10 && (
+                                  <tr>
+                                    <td colSpan={6} className="p-1 text-center font-light text-slate-500 italic bg-white/5">... dan {importedExcelStudents.length - 10} baris siswa data lainnya ...</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex justify-end gap-3">
                         <button 
-                          onClick={() => { setShowBulkImport(false); setBulkImportText(""); setImportFeedback(""); }}
+                          onClick={() => { 
+                            setShowBulkImport(false); 
+                            setBulkImportText(""); 
+                            setImportFeedback(""); 
+                            setImportedExcelStudents([]);
+                          }}
                           className={`px-3 py-1.5 rounded-lg text-xs transition ${
                             isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
                           }`}
                         >
                           Batal
                         </button>
-                        <button
-                          onClick={handleBulkImport}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
-                          }`}
-                        >
-                          Proses Data Import
-                        </button>
+                        {importedExcelStudents.length > 0 ? (
+                          <button
+                            onClick={handleImportExcelStudentsSubmit}
+                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-xs font-bold text-slate-950 rounded-lg transition shadow-md"
+                          >
+                            Simpan {importedExcelStudents.length} Siswa dari Excel
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleBulkImport}
+                            disabled={!bulkImportText.trim()}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 ${
+                              isDarkActive ? "bg-cyan-500 text-slate-955 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                            }`}
+                          >
+                            Proses Data Teks CSV
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2354,7 +2853,9 @@ export default function App() {
                             <th className="py-3 px-4">Foto / Profil</th>
                             <th className="py-3 px-4">NISN / NIS</th>
                             <th className="py-3 px-4">Jenis Kelamin</th>
-                            <th className="py-3 px-4">Tempat, Tgl Lahir</th>
+                            <th className="py-3 px-4">Tempat Lahir</th>
+                            <th className="py-3 px-4">Tanggal Lahir</th>
+                            <th className="py-3 px-4">Nama Orang Tua</th>
                             <th className="py-3 px-4">Kelas Rombel</th>
                             <th className="py-3 px-4 text-center">Status Kelulusan</th>
                             <th className="py-3 px-4 text-right w-24">Aksi</th>
@@ -2363,7 +2864,7 @@ export default function App() {
                         <tbody className={`divide-y ${isDarkActive ? "divide-white/5" : "divide-slate-105"}`}>
                           {filteredStudentsList.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="py-12 text-center text-slate-500 italic font-light">Tidak ada records siswa cocok dengan filter pencarian.</td>
+                              <td colSpan={9} className="py-12 text-center text-slate-500 italic font-light">Tidak ada records siswa cocok dengan filter pencarian.</td>
                             </tr>
                           ) : (
                             filteredStudentsList.map(s => (
@@ -2391,8 +2892,14 @@ export default function App() {
                                   {s.nisn} / <span className="text-slate-550">{s.nis}</span>
                                 </td>
                                 <td className={`py-2.5 px-4 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>{s.gender}</td>
-                                <td className={`py-2.5 px-4 shrink-0 font-mono text-[11px] ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
-                                  {s.birthPlace || "Jakarta"}, {s.birthDate}
+                                <td className={`py-2.5 px-4 capitalize ${isDarkActive ? "text-slate-350" : "text-slate-650"}`}>
+                                  {s.birthPlace || "Jakarta"}
+                                </td>
+                                <td className={`py-2.5 px-4 font-mono text-[11px] ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                                  {s.birthDate}
+                                </td>
+                                <td className={`py-2.5 px-4 ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>
+                                  {s.parentName || "-"}
                                 </td>
                                 <td className={`py-2.5 px-4 font-semibold ${isDarkActive ? "text-slate-300" : "text-slate-700"}`}>{s.className}</td>
                                 <td className="py-2.5 px-4 text-center">
@@ -2549,13 +3056,29 @@ export default function App() {
 
                     <div className="flex flex-wrap items-center gap-3">
                       <button
+                        onClick={handleExportGradesExcel}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/20 border-emerald-500/20 transition shadow-sm cursor-pointer"
+                        title="Ekspor daftar transkrip nilai ke format Microsoft Excel (.xlsx)"
+                      >
+                        <FileSpreadsheet size={14} className="text-emerald-400" />
+                        <span>Export Nilai Excel</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadGradesExcelTemplate}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-cyan-500/10 text-cyan-455 hover:bg-cyan-500/20 border-cyan-500/20 transition shadow-sm cursor-pointer"
+                        title="Unduh file xlsx template untuk pengisian nilai massal"
+                      >
+                        <FileText size={14} className="text-cyan-400" />
+                        <span>Unduh Template Nilai</span>
+                      </button>
+                      <button
                         onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
                         className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl transition cursor-pointer ${
                           isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
                         }`}
                       >
                         <Upload size={14} />
-                        <span>Import Nilai CSV</span>
+                        <span>Import Nilai Excel / CSV</span>
                       </button>
                     </div>
                   </div>
@@ -2566,9 +3089,9 @@ export default function App() {
                       isDarkActive ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     }`}>
                       <div>
-                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa (CSV)</h3>
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa (Excel & CSV)</h3>
                         <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
-                          Masukkan baris CSV dengan baris header mengandung <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
+                          Unggah file Excel langsung. Pastikan baris pertama (header) berisi kolom <span className="font-semibold text-cyan-400">NISN</span> diikuti dengan kode mata pelajaran yang aktif (misal: *{subjects.slice(0, 3).map(s => s.id).join(", ")}*).
                         </p>
                       </div>
 
@@ -2576,32 +3099,126 @@ export default function App() {
                         <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono rounded-lg">{gradesImportFeedback}</p>
                       )}
 
-                      <textarea
-                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
-                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
-                        }`}
-                        placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
-                        value={bulkGradesImportText}
-                        onChange={e => setBulkGradesImportText(e.target.value)}
-                      />
+                      {/* Twin Upload Mode */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* File Upload zone */}
+                        <div className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition ${
+                          isDarkActive ? "border-white/10 bg-slate-950/20 hover:bg-slate-950/40" : "border-slate-300 bg-slate-50 hover:bg-slate-100/50"
+                        }`}>
+                          <Upload size={24} className="text-cyan-500 mb-2" />
+                          <label className="block text-xs font-bold text-slate-300 mb-2 cursor-pointer">
+                            <span className="text-blue-500 hover:underline">Unggah Berkas Nilai Excel (.xlsx, .xls, .csv)</span>
+                            <input
+                              type="file"
+                              accept=".xlsx, .xls, .csv"
+                              className="hidden"
+                              onChange={handleGradesExcelUpload}
+                            />
+                          </label>
+                          <p className={`text-[9px] ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>Nilai raport siswa akan dipetakan langsung ke NISN</p>
+                        </div>
+
+                        {/* Back-up textarea block */}
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Atau Tempel Teks CSV Nilai Raport (Cadangan)</label>
+                          <textarea
+                            className={`w-full border rounded-xl p-2.5 text-[10px] font-mono h-24 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                            }`}
+                            placeholder={`nisn,${subjects.map(s => s.id).join(",")}\n0081234561,85,90,78...`}
+                            value={bulkGradesImportText}
+                            onChange={e => {
+                              setBulkGradesImportText(e.target.value);
+                              setImportedExcelGrades([]); // clear Excel parsed preview if manually writing
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* EXCEL PARSED PREVIEW OF STUDENT SCORES */}
+                      {importedExcelGrades.length > 0 && (
+                        <div className="border border-white/10 rounded-xl overflow-hidden bg-slate-950/30">
+                          <div className="p-2 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-emerald-400 font-mono">Daftar Nilai Teridentifikasi dari Excel ({importedExcelGrades.length} siswa)</span>
+                            <button
+                              onClick={() => setImportedExcelGrades([])}
+                              className="text-[9px] text-rose-400 hover:underline font-semibold"
+                            >
+                              Bersihkan
+                            </button>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto text-[10px]">
+                            <table className="w-full text-left text-slate-300 divide-y divide-white/5">
+                              <thead className="bg-slate-900 sticky top-0 text-slate-400 font-mono text-[9px]">
+                                <tr>
+                                  <th className="p-1.5">No</th>
+                                  <th className="p-1.5">NISN / Nama Siswa</th>
+                                  <th className="p-1.5">Pelajaran terisi</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5">
+                                {importedExcelGrades.slice(0, 8).map((std, index) => (
+                                  <tr key={index} className="hover:bg-white/5">
+                                    <td className="p-1.5 font-mono text-slate-550">{index + 1}</td>
+                                    <td className="p-1.5">
+                                      <div className="font-mono font-bold text-slate-100">{std.nisn}</div>
+                                      <div className="text-[9px] text-slate-400">{std.name}</div>
+                                    </td>
+                                    <td className="p-1.5 text-xs">
+                                      <div className="flex flex-wrap gap-1 font-mono text-[9px]">
+                                        {Object.entries(std.grades || {}).map(([sub, score]) => (
+                                          <span key={sub} className="bg-emerald-500/10 text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/20">
+                                            {sub}: {score}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                                {importedExcelGrades.length > 8 && (
+                                  <tr>
+                                    <td colSpan={3} className="p-1.5 text-center font-light text-slate-500 italic bg-white/5">... dan {importedExcelGrades.length - 8} siswa data nilai raport lainnya ...</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex justify-end gap-3">
                         <button 
-                          onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
+                          onClick={() => { 
+                            setShowGradesBulkImport(false); 
+                            setBulkGradesImportText(""); 
+                            setGradesImportFeedback(""); 
+                            setImportedExcelGrades([]);
+                          }}
                           className={`px-3 py-1.5 rounded-lg text-xs transition ${
                             isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
                           }`}
                         >
                           Batal
                         </button>
-                        <button
-                          onClick={handleGradesBulkImport}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
-                          }`}
-                        >
-                          Proses Impor Nilai
-                        </button>
+
+                        {importedExcelGrades.length > 0 ? (
+                          <button
+                            onClick={handleImportExcelGradesSubmit}
+                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-xs font-bold text-slate-950 rounded-lg transition shadow-md"
+                          >
+                            Simpan {importedExcelGrades.length} Transkrip dari Excel
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleGradesBulkImport}
+                            disabled={!bulkGradesImportText.trim()}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 ${
+                              isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                            }`}
+                          >
+                            Proses Impor Tonal CSV
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2761,13 +3378,29 @@ export default function App() {
                         <span>Cetak Leger Rombel</span>
                       </button>
                       <button
+                        onClick={handleExportGradesExcel}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/20 border-emerald-500/20 transition shadow-sm cursor-pointer"
+                        title="Ekspor transkrip nilai leger ke format Microsoft Excel (.xlsx)"
+                      >
+                        <FileSpreadsheet size={14} className="text-emerald-400" />
+                        <span>Export Leger Excel</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadGradesExcelTemplate}
+                        className="flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl bg-cyan-500/10 text-cyan-455 hover:bg-cyan-500/20 border-cyan-500/20 transition shadow-sm cursor-pointer"
+                        title="Unduh file xlsx template untuk pengisian nilai massal"
+                      >
+                        <FileText size={14} className="text-cyan-400" />
+                        <span>Unduh Template Nilai</span>
+                      </button>
+                      <button
                         onClick={() => setShowGradesBulkImport(!showGradesBulkImport)}
                         className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-semibold rounded-xl transition ${
                           isDarkActive ? "bg-slate-900 hover:bg-slate-800 border-white/10 text-slate-300" : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-sm"
                         }`}
                       >
                         <Upload size={14} />
-                        <span>Import Nilai CSV</span>
+                        <span>Import Nilai Excel / CSV</span>
                       </button>
                     </div>
                   </div>
@@ -2778,9 +3411,9 @@ export default function App() {
                       isDarkActive ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     }`}>
                       <div>
-                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa Baru (CSV)</h3>
+                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkActive ? "text-white" : "text-slate-800"}`}>Import Nilai Siswa Baru (Excel & CSV)</h3>
                         <p className={`text-[10px] mt-1 leading-normal ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
-                          Gunakan baris CSV yang memiliki baris header berisi <span className="font-mono text-cyan-400">nisn</span> diikuti kode singkatan Mata Pelajaran Anda yang aktif demi pencocokan nilai dinamis.
+                          Unggah file Excel langsung. Pastikan baris pertama (header) berisi kolom <span className="font-semibold text-cyan-400">NISN</span> diikuti dengan kode mata pelajaran yang aktif (misal: *{subjects.slice(0, 3).map(s => s.id).join(", ")}*).
                         </p>
                       </div>
 
@@ -2788,32 +3421,126 @@ export default function App() {
                         <p className="p-2 border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-mono rounded-lg">{gradesImportFeedback}</p>
                       )}
 
-                      <textarea
-                        className={`w-full border rounded-xl p-3 text-xs font-mono h-32 focus:outline-none transition ${
-                          isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
-                        }`}
-                        placeholder={`Masukkan format CSV seperti berikut:\nnisn,${subjects.map(s => s.id).join(",")}\n0081234561,${subjects.map((_, idx) => 80 + (idx % 3) * 5).join(",")}\n0081234562,${subjects.map((_, idx) => 75 + (idx % 2) * 10).join(",")}`}
-                        value={bulkGradesImportText}
-                        onChange={e => setBulkGradesImportText(e.target.value)}
-                      />
+                      {/* Twin Upload Mode */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* File Upload zone */}
+                        <div className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition ${
+                          isDarkActive ? "border-white/10 bg-slate-950/20 hover:bg-slate-950/40" : "border-slate-300 bg-slate-50 hover:bg-slate-100/50"
+                        }`}>
+                          <Upload size={24} className="text-cyan-500 mb-2" />
+                          <label className="block text-xs font-bold text-slate-300 mb-2 cursor-pointer">
+                            <span className="text-blue-500 hover:underline">Unggah Berkas Nilai Excel (.xlsx, .xls, .csv)</span>
+                            <input
+                              type="file"
+                              accept=".xlsx, .xls, .csv"
+                              className="hidden"
+                              onChange={handleGradesExcelUpload}
+                            />
+                          </label>
+                          <p className={`text-[9px] ${isDarkActive ? "text-slate-500" : "text-slate-400"}`}>Nilai raport siswa akan dipetakan langsung ke NISN</p>
+                        </div>
+
+                        {/* Back-up textarea block */}
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Atau Tempel Teks CSV Nilai Raport (Cadangan)</label>
+                          <textarea
+                            className={`w-full border rounded-xl p-2.5 text-[10px] font-mono h-24 focus:outline-none transition ${
+                              isDarkActive ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500/50" : "bg-white border-slate-200 text-slate-850 focus:border-blue-500/50 shadow-inner"
+                            }`}
+                            placeholder={`nisn,${subjects.map(s => s.id).join(",")}\n0081234561,85,90,78...`}
+                            value={bulkGradesImportText}
+                            onChange={e => {
+                              setBulkGradesImportText(e.target.value);
+                              setImportedExcelGrades([]); // clear Excel parsed preview if manually writing
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* EXCEL PARSED PREVIEW OF STUDENT SCORES */}
+                      {importedExcelGrades.length > 0 && (
+                        <div className="border border-white/10 rounded-xl overflow-hidden bg-slate-950/30">
+                          <div className="p-2 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-emerald-400 font-mono">Daftar Nilai Teridentifikasi dari Excel ({importedExcelGrades.length} siswa)</span>
+                            <button
+                              onClick={() => setImportedExcelGrades([])}
+                              className="text-[9px] text-rose-400 hover:underline font-semibold"
+                            >
+                              Bersihkan
+                            </button>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto text-[10px]">
+                            <table className="w-full text-left text-slate-300 divide-y divide-white/5">
+                              <thead className="bg-slate-900 sticky top-0 text-slate-400 font-mono text-[9px]">
+                                <tr>
+                                  <th className="p-1.5">No</th>
+                                  <th className="p-1.5">NISN / Nama Siswa</th>
+                                  <th className="p-1.5">Pelajaran terisi</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5">
+                                {importedExcelGrades.slice(0, 8).map((std, index) => (
+                                  <tr key={index} className="hover:bg-white/5">
+                                    <td className="p-1.5 font-mono text-slate-550">{index + 1}</td>
+                                    <td className="p-1.5">
+                                      <div className="font-mono font-bold text-slate-100">{std.nisn}</div>
+                                      <div className="text-[9px] text-slate-400">{std.name}</div>
+                                    </td>
+                                    <td className="p-1.5 text-xs">
+                                      <div className="flex flex-wrap gap-1 font-mono text-[9px]">
+                                        {Object.entries(std.grades || {}).map(([sub, score]) => (
+                                          <span key={sub} className="bg-emerald-500/10 text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/20">
+                                            {sub}: {score}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                                {importedExcelGrades.length > 8 && (
+                                  <tr>
+                                    <td colSpan={3} className="p-1.5 text-center font-light text-slate-500 italic bg-white/5">... dan {importedExcelGrades.length - 8} siswa data nilai raport lainnya ...</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex justify-end gap-3">
                         <button 
-                          onClick={() => { setShowGradesBulkImport(false); setBulkGradesImportText(""); setGradesImportFeedback(""); }}
+                          onClick={() => { 
+                            setShowGradesBulkImport(false); 
+                            setBulkGradesImportText(""); 
+                            setGradesImportFeedback(""); 
+                            setImportedExcelGrades([]);
+                          }}
                           className={`px-3 py-1.5 rounded-lg text-xs transition ${
                             isDarkActive ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
                           }`}
                         >
                           Batal
                         </button>
-                        <button
-                          onClick={handleGradesBulkImport}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                            isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
-                          }`}
-                        >
-                          Proses Impor Nilai
-                        </button>
+
+                        {importedExcelGrades.length > 0 ? (
+                          <button
+                            onClick={handleImportExcelGradesSubmit}
+                            className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-xs font-bold text-slate-950 rounded-lg transition shadow-md"
+                          >
+                            Simpan {importedExcelGrades.length} Transkrip dari Excel
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleGradesBulkImport}
+                            disabled={!bulkGradesImportText.trim()}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 ${
+                              isDarkActive ? "bg-cyan-500 text-slate-950 hover:bg-cyan-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                            }`}
+                          >
+                            Proses Impor Tonal CSV
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -3335,6 +4062,306 @@ export default function App() {
                   </form>
                 </div>
               )}
+
+              {/* Cetak SKL Tab */}
+              {activeAdminTab === "cetak-skl" && (() => {
+                const filteredCetakSklList = adminStudents.filter(s => {
+                  const sTerm = cetakSklNameFilter.toLowerCase();
+                  const matchSearch = s.name.toLowerCase().includes(sTerm) || s.nisn.includes(sTerm) || s.nis.includes(sTerm);
+                  const matchClass = !cetakSklClassFilter || s.className === cetakSklClassFilter;
+                  return matchSearch && matchClass;
+                });
+
+                const handleStartBulkPrint = async (nisnsToPrint: string[]) => {
+                  if (nisnsToPrint.length === 0) {
+                    alert("Harap pilih minimal satu siswa untuk dicetak.");
+                    return;
+                  }
+                  setBulkPrintLoading(true);
+                  try {
+                    await fetchBulkVerificationCodes(nisnsToPrint);
+                    setBulkPrintSelected(nisnsToPrint);
+                    setIsBulkPrintPreviewActive(true);
+                  } catch (e) {
+                    console.error("Gagal memulai cetak massal:", e);
+                  } finally {
+                    setBulkPrintLoading(false);
+                  }
+                };
+
+                return (
+                  <div className="space-y-6">
+                    {isBulkPrintPreviewActive ? (
+                      <div className="space-y-6">
+                        {/* Control Panel (no-print) */}
+                        <div className={`p-5 rounded-2xl border flex flex-wrap items-center justify-between gap-4 no-print ${
+                          isDarkActive ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        }`}>
+                          <div>
+                            <h2 className={`text-lg font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Pratinjau Kelompok Cetak Massal (Ready to Print)</h2>
+                            <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                              Terdapat total <span className="font-extrabold text-blue-500 font-mono">{bulkPrintSelected.length}</span> dokumen SKL siap cetak. Semua dokumen telah divalidasi dengan segel QR verifikasi siber.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setIsBulkPrintPreviewActive(false)}
+                              className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer ${
+                                isDarkActive 
+                                  ? "bg-white/5 hover:bg-white/10 text-slate-300" 
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                              }`}
+                            >
+                              <ArrowLeft size={14} />
+                              <span>Kembali ke Daftar</span>
+                            </button>
+                            <button
+                              onClick={() => window.print()}
+                              className="flex items-center gap-2 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer"
+                            >
+                              <Printer size={15} />
+                              <span>Mulai Cetak / Simpan PDF</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Printable Documents list (will break pages natively) */}
+                        <div className="space-y-8 print:space-y-0">
+                          {bulkPrintSelected.map((nisn, index) => {
+                            const student = adminStudents.find(s => s.nisn === nisn);
+                            if (!student) return null;
+                            const verificationCode = bulkVerificationCodes[nisn] || `VER-${nisn}-MOCK`;
+                            return (
+                              <div 
+                                key={nisn} 
+                                className={index < bulkPrintSelected.length - 1 ? "print:break-after-page" : ""}
+                                style={index < bulkPrintSelected.length - 1 ? { pageBreakAfter: "always", breakAfter: "page" } : undefined}
+                              >
+                                <SklDocument
+                                  student={student}
+                                  subjects={subjects}
+                                  settings={settings || {
+                                    schoolName: "SMP Islam Al Hikmah Mayong",
+                                    schoolLogo: "",
+                                    schoolFavicon: "",
+                                    address: "",
+                                    email: "",
+                                    phone: "",
+                                    footerText: "",
+                                    graduationDate: "",
+                                    graduationTime: "",
+                                    academicYear: "2025/2026",
+                                    principalName: "",
+                                    principalNip: "",
+                                    signatureImage: "",
+                                    announcementTemplate: ""
+                                  }}
+                                  verificationCode={verificationCode}
+                                  onBack={() => {}}
+                                  hideControls={true}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6 font-sans">
+                        <div className={`border-b pb-4 ${isDarkActive ? "border-white/5" : "border-slate-200"}`}>
+                          <h2 className={`text-xl font-bold ${isDarkActive ? "text-white" : "text-slate-800"}`}>Cetak Massal Surat Keterangan Lulus (SKL)</h2>
+                          <p className={`text-xs mt-1 ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>
+                            Cetak SKL secara massal berdasar rombel kelas, pencarian nama individu, atau pilih beberapa siswa secara selektif.
+                          </p>
+                        </div>
+
+                        {/* Filters and Action Card */}
+                        <div className={`p-5 rounded-2xl border space-y-4 ${
+                          isDarkActive ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        }`}>
+                          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                            {/* Search Input */}
+                            <div className="md:col-span-4 relative">
+                              <label className={`block text-[11px] font-semibold mb-1.5 cursor-default ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Cari Nama / NISN / NIS</label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder="Cari nama atau nomor..."
+                                  className={`w-full border rounded-xl py-2 pl-9 pr-3 text-xs focus:outline-none transition font-sans ${
+                                    isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                                  }`}
+                                  value={cetakSklNameFilter}
+                                  onChange={e => setCetakSklNameFilter(e.target.value)}
+                                />
+                                <Search size={14} className="absolute left-3.5 top-3.5 text-slate-505" />
+                              </div>
+                            </div>
+
+                            {/* Class Select */}
+                            <div className="md:col-span-3">
+                              <label className={`block text-[11px] font-semibold mb-1.5 cursor-default ${isDarkActive ? "text-slate-400" : "text-slate-500"}`}>Filter Rombel Kelas</label>
+                              <select
+                                className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none transition ${
+                                  isDarkActive ? "bg-slate-950 border-white/10 text-white focus:border-cyan-500/50" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500/50 shadow-inner"
+                                }`}
+                                value={cetakSklClassFilter}
+                                onChange={e => setCetakSklClassFilter(e.target.value)}
+                              >
+                                <option value="">Semua Kelas</option>
+                                {classFilterOptions.map(cls => (
+                                  <option key={cls} value={cls}>{cls}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="md:col-span-5 flex flex-wrap gap-2.5 justify-end">
+                              <button
+                                onClick={() => {
+                                  const matchedNisns = filteredCetakSklList
+                                    .filter(s => s.status !== GraduationStatus.TIDAK_LULUS)
+                                    .map(s => s.nisn);
+                                  handleStartBulkPrint(matchedNisns);
+                                }}
+                                disabled={bulkPrintLoading || filteredCetakSklList.filter(s => s.status !== GraduationStatus.TIDAK_LULUS).length === 0}
+                                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl text-xs transition cursor-pointer text-white shadow disabled:opacity-50 ${
+                                  isDarkActive 
+                                    ? "bg-emerald-600 hover:bg-emerald-500" 
+                                    : "bg-emerald-500 hover:bg-emerald-600"
+                                }`}
+                              >
+                                {bulkPrintLoading ? <RefreshCw className="animate-spin" size={13} /> : <Printer size={13} />}
+                                <span>Cetak Semua Terfilter ({filteredCetakSklList.filter(s => s.status !== GraduationStatus.TIDAK_LULUS).length})</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleStartBulkPrint(bulkPrintSelected)}
+                                disabled={bulkPrintLoading || bulkPrintSelected.length === 0}
+                                className="flex items-center gap-2 px-4 py-2 font-bold text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 rounded-xl text-xs transition cursor-pointer shadow disabled:opacity-50"
+                              >
+                                {bulkPrintLoading ? <RefreshCw className="animate-spin" size={13} /> : <Printer size={13} />}
+                                <span>Cetak Terpilih ({bulkPrintSelected.length})</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Student Datatable List of results */}
+                        <div className={`border rounded-2xl overflow-hidden ${
+                          isDarkActive ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
+                        }`}>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className={`font-semibold border-b ${
+                                  isDarkActive ? "bg-white/5 text-slate-400 border-white/10" : "bg-slate-100 text-slate-600 border-slate-200"
+                                }`}>
+                                  <th className="p-3 text-center w-10">
+                                    <input
+                                      type="checkbox"
+                                      className="cursor-pointer rounded border-slate-300 accent-blue-600"
+                                      checked={
+                                        filteredCetakSklList.length > 0 &&
+                                        filteredCetakSklList.filter(s => s.status !== GraduationStatus.TIDAK_LULUS).every(s => bulkPrintSelected.includes(s.nisn))
+                                      }
+                                      onChange={() => {
+                                        const allPrintableFiltered = filteredCetakSklList
+                                          .filter(s => s.status !== GraduationStatus.TIDAK_LULUS)
+                                          .map(s => s.nisn);
+                                        const isAllSelected = allPrintableFiltered.every(nisn => bulkPrintSelected.includes(nisn));
+                                        if (isAllSelected) {
+                                          setBulkPrintSelected(prev => prev.filter(nisn => !allPrintableFiltered.includes(nisn)));
+                                        } else {
+                                          setBulkPrintSelected(prev => {
+                                            const union = new Set([...prev, ...allPrintableFiltered]);
+                                            return Array.from(union);
+                                          });
+                                        }
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-3 w-16 text-center">No</th>
+                                  <th className="p-3">NISN / NIS</th>
+                                  <th className="p-3">Nama Lengkap</th>
+                                  <th className="p-3">Kelas Rombel</th>
+                                  <th className="p-3 text-center">Status Kelulusan</th>
+                                  <th className="p-3 text-right">Aksi Tindakan</th>
+                                </tr>
+                              </thead>
+                              <tbody className={`divide-y ${isDarkActive ? "divide-white/5" : "divide-slate-200"}`}>
+                                {filteredCetakSklList.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={7} className="text-center p-8 text-slate-500 italic block-theme-font">
+                                      Tidak ada data siswa ditemukan yang cocok dengan kriteria filter pencarian.
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  filteredCetakSklList.map((student, idx) => {
+                                    const isChecked = bulkPrintSelected.includes(student.nisn);
+                                    const isPrintable = student.status !== GraduationStatus.TIDAK_LULUS;
+                                    return (
+                                      <tr 
+                                        key={student.nisn} 
+                                        className={`hover:bg-slate-100/50 transition duration-155 ${
+                                          isChecked ? (isDarkActive ? "bg-blue-500/5" : "bg-blue-50/40") : ""
+                                        }`}
+                                      >
+                                        <td className="p-3 text-center">
+                                          <input
+                                            type="checkbox"
+                                            disabled={!isPrintable}
+                                            className="cursor-pointer rounded border-slate-300 accent-blue-600 disabled:opacity-30"
+                                            checked={isChecked}
+                                            onChange={() => {
+                                              if (isChecked) {
+                                                setBulkPrintSelected(prev => prev.filter(n => n !== student.nisn));
+                                              } else {
+                                                setBulkPrintSelected(prev => [...prev, student.nisn]);
+                                              }
+                                            }}
+                                          />
+                                        </td>
+                                        <td className="p-3 text-center font-mono text-[11px] text-slate-500">{idx + 1}</td>
+                                        <td className="p-3 font-mono text-[11px] text-slate-400">{student.nisn} / {student.nis}</td>
+                                        <td className={`p-3 font-bold ${isDarkActive ? "text-slate-200" : "text-slate-808"}`}>
+                                          {student.name}
+                                        </td>
+                                        <td className="p-3 text-slate-500">{student.className}</td>
+                                        <td className="p-3 text-center">
+                                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                            student.status === GraduationStatus.LULUS 
+                                              ? "bg-emerald-500/10 text-emerald-500" 
+                                              : student.status === GraduationStatus.LULUS_BERSYARAT 
+                                              ? "bg-amber-500/10 text-amber-500" 
+                                              : "bg-rose-500/10 text-rose-500"
+                                          }`}>
+                                            {student.status}
+                                          </span>
+                                        </td>
+                                        <td className="p-3 text-right">
+                                          {isPrintable ? (
+                                            <button
+                                              onClick={() => handleStartBulkPrint([student.nisn])}
+                                              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg text-[11px] font-bold transition border border-blue-500/20 cursor-pointer duration-150"
+                                            >
+                                              Cetak SKL
+                                            </button>
+                                          ) : (
+                                            <span className="text-[10px] text-slate-500 italic">SKL Tidak Tersedia</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* 5. ANNOUNCEMENTS TAB WITH AI GENERATOR CO-PILOT */}
               {activeAdminTab === "announcements" && (
