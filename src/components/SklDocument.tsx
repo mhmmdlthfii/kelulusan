@@ -105,7 +105,7 @@ export default function SklDocument({ student, subjects, settings, verificationC
               Surat Keterangan Lulus (SKL)
             </h1>
             <p className="text-xs font-semibold text-slate-900 font-mono mt-1">
-              Nomor: 069. {student.nis ? student.nis.slice(-3) : "000"} /SMPIA/VI/2026
+              Nomor: 422.6/069. {student.nis ? student.nis.slice(-3) : "000"} /SMPIA/VI/2026
             </p>
           </div>
 
