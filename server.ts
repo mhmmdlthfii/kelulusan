@@ -452,14 +452,19 @@ async function run() {
   });
 
   // Vite dev server mounting or Production static bundle serving
-  if (process.env.NODE_ENV !== "production") {
+  // Check if we are running with a compiled dist bundle (common on shared Hosting panels like Hostinger)
+  // to avoid starting the heavy Vite compiler dynamically at runtime.
+  const distPath = path.join(process.cwd(), "dist");
+  const hasCompiledProdFiles = fs.existsSync(path.join(distPath, "index.html"));
+  const isProduction = process.env.NODE_ENV === "production" || hasCompiledProdFiles;
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));

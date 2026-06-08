@@ -179,7 +179,11 @@ const DEFAULT_VERIFICATIONS: VerificationCode[] = [
 ];
 
 export class DbStore {
+  private static cachedDb: DatabaseSchema | null = null;
+  private static initialized = false;
+
   private static init() {
+    if (this.initialized) return;
     if (!fs.existsSync(DB_DIR)) {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }
@@ -194,14 +198,20 @@ export class DbStore {
         verification_codes: DEFAULT_VERIFICATIONS
       };
       fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
+      this.cachedDb = db;
     }
+    this.initialized = true;
   }
 
   private static read(): DatabaseSchema {
     this.init();
+    if (this.cachedDb) {
+      return this.cachedDb;
+    }
     try {
       const data = fs.readFileSync(DB_FILE, "utf8");
-      return JSON.parse(data);
+      this.cachedDb = JSON.parse(data);
+      return this.cachedDb!;
     } catch (e) {
       console.error("Error reading database file", e);
       return {
@@ -218,6 +228,7 @@ export class DbStore {
 
   private static write(db: DatabaseSchema) {
     this.init();
+    this.cachedDb = db;
     fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
   }
 
